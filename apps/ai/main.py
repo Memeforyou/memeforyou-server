@@ -1,4 +1,4 @@
-from AI import search
+from ai import search
 from pydantic import BaseModel
 from fastapi import FastAPI
 
