@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "prisma": "^6.19.0"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.8",
+    "@prisma/client": "^6.19.0",
+    "@zilliz/milvus2-sdk-node": "^2.6.4"
+  }
+}
