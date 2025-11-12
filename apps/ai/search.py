@@ -1,7 +1,19 @@
+from google import genai
+from pydantic import BaseModel
+from dotenv import load_dotenv
 import os
 import json
 import numpy as np
 from sentence_transformers import SentenceTransformer
+
+load_dotenv()
+
+client = genai.Client()
+
+# Final selection prompt
+prompt = """
+SOMEPROMPT
+"""
 
 # Config
 metadata_dir = "./" # Remnant from local prototype
@@ -92,6 +104,10 @@ def find_topn(query, top_n=top_n):
         print("-" * 60)
 
     # Return type shall be changed to properly return to main.py for API endpoint
+
+# Function for final evaluation request to Gemini
+def final_eval():
+    pass
 
 # For testing
 if __name__ == "__main__":
