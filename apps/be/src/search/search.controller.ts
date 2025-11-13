@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { SearchService } from "./search.service";
-import { SearchQueryDto } from "../dto/search.query.dto";
+import { SearchQueryDto } from "./dto/search.query.dto";
 
 @Controller("search")
 export class SearchController {

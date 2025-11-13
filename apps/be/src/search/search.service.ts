@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service";
-import { SearchQueryDto } from "../dto/search.query.dto";
-import { AiClientService } from "../../ai-client/ai-client.service";
+import { PrismaService } from "../prisma/prisma.service";
+import { SearchQueryDto } from "./dto/search.query.dto";
+import { AiClientService } from "../ai-client/ai-client.service";
 
 // 검색 파라미터 전처리, AI 호출, DB 메타데이터 조회, 결과 정렬/조립
 
