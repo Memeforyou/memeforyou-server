@@ -3,17 +3,26 @@ info:
   title: MemeForYou API
   version: 1.0.0
   description: Meme image search and recommendation API
+  license:
+    name: MemeForYou License
+    url: https://memeforyou.com/license
 servers:
   - url: http://localhost:3000
     description: Local development
+security: []
 tags:
   - name: Search
+    description: Search for images
   - name: Image
+    description: Get image details
   - name: Download
+    description: Generate signed URL for image download
   - name: AI
+    description: AI operations
 paths:
   /search:
     get:
+      operationId: searchImages
       tags: [Search]
       summary: Search for images
       parameters:
@@ -58,6 +67,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /images/{image_id}:
     get:
+      operationId: getImageById
       tags: [Image]
       summary: Get image details
       parameters:
@@ -87,13 +97,14 @@ paths:
 
   /images/{image_id}/download:
     post:
+      operationId: downloadImage
       tags: [Download]
       summary: Generate signed URL for image download
       parameters:
         - name: image_id
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: integer }
       responses:
         "200":
           description: Signed URL for image download
@@ -116,6 +127,7 @@ paths:
 
   /ai/similar:
     post:
+      operationId: findSimilarImages
       tags: [AI]
       summary: Find similar images
       requestBody:
@@ -148,7 +160,7 @@ components:
     Image:
       type: object
       properties:
-        id: { type: integer }
+        image_id: { type: integer }
         original_url: { type: string, format: uri }
         like_count: { type: integer }
         caption: { type: string }
@@ -172,7 +184,7 @@ components:
     SimilarRequest:
       type: object
       properties:
-        image_id: { type: string }
+        image_id: { type: integer }
         top_k: { type: integer }
     SimilarResponse:
       type: object
@@ -185,5 +197,5 @@ components:
       properties:
         message: { type: string }
         status_code: { type: integer }
-        required: [message, status_code]
         timestamp: { type: string, format: date-time }
+      required: [message, status_code]
