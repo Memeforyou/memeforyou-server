@@ -1,5 +1,5 @@
 # import search
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi import FastAPI
 from typing import List
 
@@ -8,8 +8,8 @@ app = FastAPI(title="memeforyou AI API - GDGoC KU 2025 worktree")
 
 # User input data class
 class InputData(BaseModel):
-    text: str
-    count: int
+    text: str = Field(..., examples=['늦잠 자서 수업을 째 버렸어'], description="유저 텍스트 입력 값")
+    count: int = Field(..., examples=[5, 10], description="반환받을 밈 개수")
 
 # Individual meme to be included in full response
 class IndvRec(BaseModel):
