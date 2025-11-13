@@ -96,10 +96,10 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /images/{image_id}/download:
-    post:
+    get:
       operationId: downloadImage
       tags: [Download]
-      summary: Generate signed URL for image download
+      summary: Get image clooud_url for download
       parameters:
         - name: image_id
           in: path
