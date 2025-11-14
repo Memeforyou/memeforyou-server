@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-py"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Image {
+  image_id Int @id @default(autoincrement())
+  original_url String @db.Text
+  like_cnt Int @default(0)
+  width Int
+  height Int
+  src_url String @db.Text
+  caption String @db.Text
+  cloud_url String @db.Text
+
+  ImageTag ImageTag[]
+  Embedding Embedding?
+}
+
+model Tag {
+  tag_id Int @id @default(autoincrement())
+  tag_name String @unique
+
+  ImageTag ImageTag[]
+}
+
+model ImageTag {
+  image_id Int
+  tag_id Int
+  image Image @relation(fields: [image_id], references: [image_id], onDelete: Cascade)
+  tag Tag @relation(fields: [tag_id], references: [tag_id])
+  @@id([image_id, tag_id])
+} 
+
+model Embedding {
+  vector Unsupported("VECTOR(1536)")
+  image_id Int @id
+  image Image @relation(fields: [image_id], references: [image_id], onDelete: Cascade)
+}
+
