@@ -50,4 +50,12 @@ export class ImageService {
     });
     return image;
   }
+
+  async getPopularImages() {
+    const images = await this.prisma.image.findMany({
+      orderBy: { like_cnt: "desc" },
+      take: 10,
+    });
+    return images;
+  }
 }

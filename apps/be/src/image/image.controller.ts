@@ -24,4 +24,9 @@ export class ImageController {
   async unlikeImage(@Param("image_id") imageId: number) {
     return await this.imageService.unlikeImage(imageId);
   }
+
+  @Get("popular")
+  async getPopularImages() {
+    return await this.imageService.getPopularImages();
+  }
 }
