@@ -40,9 +40,9 @@ export class SearchService {
     if (aiRes.candidates.length === 0) {
       throw new NotFoundException("검색 결과가 없습니다.");
     }
-
-    const imageIds = aiRes.candidates.map((candidate) => candidate.imageId);
-    // 페이지네이션 계산
+    // candidates 내 변수명 변경
+    const imageIds = aiRes.candidates.map((candidate) => candidate.image_id);
+    // 페이지네이션 계산 => 10개씩만 모델에서 줌 즉, 페이지네이션 필요 없
     const total = imageIds.length;
     if (offset >= total) {
       throw new NotFoundException("더 이상 결과가 없습니다.");

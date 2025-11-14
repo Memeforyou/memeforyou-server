@@ -9,11 +9,11 @@ import { firstValueFrom } from "rxjs";
 // AI API 호출, 에러/타임아웃/폴백 처리, 응답 파싱
 
 export interface AiSimilarSearchResponse {
+  count: number;
   candidates: Array<{
-    imageId: number;
-    similarity: number;
+    image_id: number;
+    rank: number;
   }>;
-  total?: number;
 }
 
 @Injectable()
@@ -29,14 +29,15 @@ export class AiClientService {
         Array.isArray(x.candidates) &&
         x.candidates.every(
           (candidate: any) =>
-            typeof candidate.imageId === "number" &&
-            typeof candidate.similarity === "number"
+            typeof candidate.image_id === "number" &&
+            typeof candidate.rank === "number"
         ) &&
-        (x.total === undefined || typeof x.total === "number")
+        (x.count === undefined || typeof x.count === "number")
       );
     }
     // searchService에서 받은 query를 AI 서버로 보내고 그 응답을 받아서 가공해서 돌려준다.
     // 1. AI 서버에 HTTP 요청을 보낸다.
+    // AI 서버에 어떻게 접근?
     try {
       const response = await firstValueFrom(
         this.httpService.post<AiSimilarSearchResponse>(`ai/similar`, req)
@@ -46,10 +47,10 @@ export class AiClientService {
       // 2. 응답을 AiSimilarSearchResponse 형식으로 변환해서 돌려준다.
       const result: AiSimilarSearchResponse = {
         candidates: data.candidates,
-        total: data.total,
+        count: data.count,
       };
       if (!isValidRes(result)) {
-        return { candidates: [], total: 0 } as AiSimilarSearchResponse;
+        throw new BadRequestException("유효하지 않은 응답입니다.");
       }
       return result;
     } catch (error) {
