@@ -21,7 +21,7 @@ class FullRecReturn(BaseModel):
     count: int
     recommendations: list["IndvRec"]
 
-@app.post("/search",
+@app.post("/ai/similar",
           response_model=FullRecReturn,
           summary="Get top N ranked meme recommendation results.",
           description="")
