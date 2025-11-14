@@ -8,11 +8,24 @@ export class ImageService {
   async getImageById(imageId: number) {
     const image = await this.prisma.image.findUnique({
       where: { image_id: imageId },
+      include: {
+        ImageTag: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     });
+    // 여기부터 !!!!!
     if (!image) {
       throw new NotFoundException("Image not found");
     }
-    return image;
+    const tags = image?.ImageTag.map((x) => x.tag.tag_name);
+    const { ImageTag, ...rest } = image;
+    return {
+      ...rest,
+      tags,
+    };
   }
 
   async downloadImage(imageId: number) {
