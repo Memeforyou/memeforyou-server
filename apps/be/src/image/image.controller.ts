@@ -14,4 +14,14 @@ export class ImageController {
   async downloadImage(@Param("image_id") imageId: number) {
     return await this.imageService.downloadImage(imageId);
   }
+
+  @Post(":image_id/like")
+  async likeImage(@Param("image_id") imageId: number) {
+    return await this.imageService.likeImage(imageId);
+  }
+
+  @Post(":image_id/like")
+  async unlikeImage(@Param("image_id") imageId: number) {
+    return await this.imageService.unlikeImage(imageId);
+  }
 }
