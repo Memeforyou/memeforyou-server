@@ -37,11 +37,13 @@ export class SearchService {
     const aiReq = { query: cleanedQuery };
     const aiRes = await this.aiClientService.similarSearch(aiReq);
 
-    if (aiRes.candidates.length === 0) {
+    if (aiRes.recommendations.length === 0) {
       throw new NotFoundException("검색 결과가 없습니다.");
     }
     // candidates 내 변수명 변경
-    const imageIds = aiRes.candidates.map((candidate) => candidate.image_id);
+    const imageIds = aiRes.recommendations.map(
+      (candidate) => candidate.image_id
+    );
     // 페이지네이션 계산 => 10개씩만 모델에서 줌 즉, 페이지네이션 필요 없
     const total = imageIds.length;
     if (offset >= total) {

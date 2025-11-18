@@ -10,7 +10,7 @@ import { firstValueFrom } from "rxjs";
 
 export interface AiSimilarSearchResponse {
   count: number;
-  candidates: Array<{
+  recommendations: Array<{
     image_id: number;
     rank: number;
   }>;
@@ -26,11 +26,11 @@ export class AiClientService {
     function isValidRes(x: any): x is AiSimilarSearchResponse {
       return (
         x &&
-        Array.isArray(x.candidates) &&
-        x.candidates.every(
-          (candidate: any) =>
-            typeof candidate.image_id === "number" &&
-            typeof candidate.rank === "number"
+        Array.isArray(x.recommendations) &&
+        x.recommendations.every(
+          (recommendation: any) =>
+            typeof recommendation.image_id === "number" &&
+            typeof recommendation.rank === "number"
         ) &&
         (x.count === undefined || typeof x.count === "number")
       );
@@ -40,20 +40,25 @@ export class AiClientService {
     // AI 서버에 어떻게 접근?
     try {
       const response = await firstValueFrom(
-        this.httpService.post<AiSimilarSearchResponse>(`ai/similar`, req)
+        this.httpService.post<AiSimilarSearchResponse>(
+          `http://localhost:8000/ai/similar`,
+          { text: req.query, count: 10 }
+        )
       );
       const data = response.data;
 
       // 2. 응답을 AiSimilarSearchResponse 형식으로 변환해서 돌려준다.
       const result: AiSimilarSearchResponse = {
-        candidates: data.candidates,
         count: data.count,
+        recommendations: data.recommendations,
       };
       if (!isValidRes(result)) {
+        console.log("Invalid AI result:", JSON.stringify(result, null, 2));
         throw new BadRequestException("유효하지 않은 응답입니다.");
       }
       return result;
     } catch (error) {
+      console.log("requesting to AI server with query:", req.query);
       throw new InternalServerErrorException(
         `AI 서버 요청 실패: ${
           error instanceof Error ? error.message : "알 수 없는 오류"
