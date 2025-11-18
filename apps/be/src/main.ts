@@ -3,6 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import appConfig from "./common/config/app.config";
 import { ValidationPipe } from "@nestjs/common";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 async function bootstrap() {
   // Nest application 부팅
@@ -14,6 +15,16 @@ async function bootstrap() {
       forbidNonWhitelisted: false,
     })
   );
+
+  const config = new DocumentBuilder()
+    .setTitle("memeforyou API")
+    .setDescription("memeforyou API documentation")
+    .setVersion("1.0")
+    .addTag("memeforyou")
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api-docs", app, document);
+
   await app.listen(appConfig().port);
 }
 bootstrap();

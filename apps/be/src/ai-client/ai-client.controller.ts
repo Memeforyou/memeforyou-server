@@ -3,7 +3,9 @@
 import { Body, Controller, Post, Query } from "@nestjs/common";
 import { AiClientService } from "./ai-client.service";
 import { FindSimilarImagesDto } from "./dto/ai-client.dto";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("AI")
 @Controller("ai")
 export class AiClientController {
   constructor(private readonly aiClientService: AiClientService) {}
