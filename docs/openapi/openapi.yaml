@@ -1,0 +1,201 @@
+openapi: 3.1.0
+info:
+  title: MemeForYou API
+  version: 1.0.0
+  description: Meme image search and recommendation API
+  license:
+    name: MemeForYou License
+    url: https://memeforyou.com/license
+servers:
+  - url: http://localhost:3000
+    description: Local development
+security: []
+tags:
+  - name: Search
+    description: Search for images
+  - name: Image
+    description: Get image details
+  - name: Download
+    description: Generate signed URL for image download
+  - name: AI
+    description: AI operations
+paths:
+  /search:
+    get:
+      operationId: searchImages
+      tags: [Search]
+      summary: Search for images
+      parameters:
+        - name: query
+          in: query
+          description: 검색어(비우면 기본 피드)
+          required: false
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [accuracy, like], default: accuracy }
+      responses:
+        "200":
+          description: A list of images
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Images not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /images/{image_id}:
+    get:
+      operationId: getImageById
+      tags: [Image]
+      summary: Get image details
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Image details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /images/{image_id}/download:
+    get:
+      operationId: downloadImage
+      tags: [Download]
+      summary: Get image clooud_url for download
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Signed URL for image download
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownloadResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /ai/similar:
+    post:
+      operationId: findSimilarImages
+      tags: [AI]
+      summary: Find similar images
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimilarRequest"
+      responses:
+        "200":
+          description: A list of similar images
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimilarResponse"
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    Image:
+      type: object
+      properties:
+        image_id: { type: integer }
+        original_url: { type: string, format: uri }
+        like_count: { type: integer }
+        caption: { type: string }
+        src_url: { type: string, format: uri }
+        cloud_url: { type: string, format: uri }
+        width: { type: integer }
+        height: { type: integer }
+        tags:
+          type: array
+          items: { type: string }
+    SearchResponse:
+      type: object
+      properties:
+        images:
+          type: array
+          items: { $ref: "#/components/schemas/Image" }
+    DownloadResponse:
+      type: object
+      properties:
+        signed_url: { type: string, format: uri }
+    SimilarRequest:
+      type: object
+      properties:
+        image_id: { type: integer }
+        top_k: { type: integer }
+    SimilarResponse:
+      type: object
+      properties:
+        images:
+          type: array
+          items: { $ref: "#/components/schemas/Image" }
+    ErrorResponse:
+      type: object
+      properties:
+        message: { type: string }
+        status_code: { type: integer }
+        timestamp: { type: string, format: date-time }
+      required: [message, status_code]
