@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import json
 import time
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 
@@ -13,6 +14,11 @@ client = genai.Client()
 prompt = """
 밈 이미지에 대해서 [OCR, 캡션, 이 밈이 재미있는 이유 설명]을 추출해. {ocr, caption, humor} 형식의 JSON으로 반환해.
 """
+
+# Configs (Paths are for seeding purpose run)
+metadata_output = "./seed/tmp/images.json"
+embedding_model = "snunlp/KR-SBERT-V40K-klueNLI-augSTS"
+embedding_output = "./seed/tmp/embeddings.json"
 
 # Define response format for Gemini Structured Response
 class MemeMeta(BaseModel):
@@ -53,7 +59,7 @@ max_total = None
 sleep_sec = 0
 
 # File setup, subject to change to accomodate Google Cloud Storage
-files = [f for f in os.listdir(imgpath) if f.endswith(".jpg")]
+files = [f for f in os.listdir(imgpath)]
 if max_total is not None:
     files = files[:max_total]
 
