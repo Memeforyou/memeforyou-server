@@ -6,6 +6,7 @@ dependencies = [
     "fastapi>=0.121.1",
     "google-cloud-storage>=3.5.0",
     "google-genai>=1.49.0",
+    "loguru>=0.7.3",
     "prisma>=0.15.0",
     "python-dotenv>=1.2.1",
     "sentence-transformers>=5.1.2",
