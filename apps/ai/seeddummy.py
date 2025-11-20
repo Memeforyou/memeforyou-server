@@ -1,7 +1,7 @@
 import asyncio
 import json
 from prisma import Prisma, register
-from prisma.models import Tag, Image, Embedding
+from prisma.models import tag, image, embedding
 from loguru import logger
 
 # Define seed file paths
@@ -27,17 +27,17 @@ async def main() -> None:
 
     # Seed Tags
     logger.info("Beginning Tags seeding...")
-    tags_count, tags_total = await seed_tags(TAGS_PATH)
+    tags_count, tags_total = await seed_tags(db, TAGS_PATH)
     logger.success(f"Tags seeded successfully. {tags_count} out of {tags_total} samples.")
 
     # Seed Images
     logger.info("Beginning Images seeding...")
-    images_count, images_total = await seed_images(IMAGES_PATH)
+    images_count, images_total = await seed_images(db, IMAGES_PATH)
     logger.success(f"Images seeded successfully. {images_count} out of {images_total} samples.")
 
     # Seed Embeddings
     logger.info("Beginning Embeddings seeding...")
-    ebds_count, ebds_total = await seed_embeddings(EBDS_PATH)
+    ebds_count, ebds_total = await seed_embeddings(db, EBDS_PATH)
     logger.success(f"Embeddings seeded successfully. {ebds_count} out of {ebds_total} samples.")
 
     # Disconnect from DB
@@ -45,7 +45,7 @@ async def main() -> None:
     logger.info("Disconnected from Prisma.")
 
 # Function to seed Tags; each of these functions return successfully seeded entries count & total entries present in json.
-async def seed_tags(path):
+async def seed_tags(db: Prisma, path):
 
     # Load tags.json from path
     data = load_json(path)
@@ -54,14 +54,14 @@ async def seed_tags(path):
 
     # Insert operations
     for idx, row in enumerate(data, start=1):
-        await Tag.prisma().create(data=row)
+        await tag.prisma(db).create(data=row)
         logger.trace(f"Seeded Tag {idx}/{total}: {row.get('tag_name')}")
         count += 1
 
     return count, total
 
 # Function to seed Images
-async def seed_images(path):
+async def seed_images(db: Prisma, path):
 
     # Load images.json from path
     data = load_json(path)
@@ -70,14 +70,14 @@ async def seed_images(path):
 
     # Insert operations
     for idx, row in enumerate(data, start=1):
-        await Image.prisma().create(data=row)
+        await image.prisma(db).create(data=row)
         logger.trace(f"Seeded Image {idx}/{total}")
         count += 1
 
     return count, total
 
 # Function to seed Embeddings
-async def seed_embeddings(path):
+async def seed_embeddings(db: Prisma, path):
 
     # Load embeddings.json from path
     data = load_json(path)
@@ -86,9 +86,20 @@ async def seed_embeddings(path):
 
     # Insert operations
     for idx, row in enumerate(data, start=1):
-        await Embedding.prisma().create(data=row)
-        logger.trace(f"Seeded Embedding {idx}/{total}")
-        count += 1
+
+        # Load data
+        image_id = row['image_id']
+        vector_data = '(' + ','.join(map(str, row['vector'])) + ')'
+
+        # Raw SQL query
+        sql = 'INSERT INTO embedding (image_id, vector) VALUES (?, ?)'
+        rows_affected = await db.execute_raw(sql, image_id, vector_data)
+
+        if rows_affected > 0:
+            logger.trace(f"Seeded Embedding {idx}/{total} for image_id: {image_id}")
+            count += 1
+        else:
+            logger.warning(f"Failed to seed Embedding {idx}/{total} for image_id: {image_id}")
 
     return count, total
 
