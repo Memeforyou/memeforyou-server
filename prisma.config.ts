@@ -6,9 +6,9 @@ import { config } from "dotenv";
 config({ path: "./prisma/.env" }); // prisma/.env를 명시적으로 로드
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: "apps/be/prisma/schema.prisma",
   migrations: {
-    path: "prisma/migrations",
+    path: "apps/be/prisma/migrations",
   },
   engine: "classic",
   datasource: {
