@@ -6,6 +6,7 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { SearchQueryDto } from "./dto/search.query.dto";
 import { AiClientService } from "../ai-client/ai-client.service";
+import { Image } from "@prisma/client";
 
 // 검색 파라미터 전처리, AI 호출, DB 메타데이터 조회, 결과 정렬/조립
 
@@ -55,9 +56,11 @@ export class SearchService {
       const images = await this.prisma.image.findMany({
         where: { image_id: { in: pagedImageIds } },
       });
-      const imageMap = new Map(images.map((image) => [image.image_id, image]));
+      const imageMap = new Map(
+        images.map((image: Image) => [image.image_id, image])
+      );
       const orderedImages = pagedImageIds
-        .map((imageId) => imageMap.get(imageId))
+        .map((imageId: number) => imageMap.get(imageId))
         .filter(Boolean);
       return {
         items: orderedImages,
