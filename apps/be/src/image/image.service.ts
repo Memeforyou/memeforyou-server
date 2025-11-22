@@ -20,7 +20,9 @@ export class ImageService {
     if (!image) {
       throw new NotFoundException("Image not found");
     }
-    const tags = image?.ImageTag.map((x) => x.tag.tag_name);
+    const tags = image?.ImageTag.map(
+      (x: { tag: { tag_name: string } }) => x.tag.tag_name
+    );
     const { ImageTag, ...rest } = image;
     return {
       ...rest,
