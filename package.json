@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
+    "@nestjs/cli": "^11.0.12",
     "@nestjs/common": "^11.1.8",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.8",
@@ -29,6 +30,8 @@
     "types:gen": "openapi-typescript docs/openapi/openapi.yaml -o apps/be/src/types/api.d.ts",
     "docs:bundle": "redocly bundle docs/openapi/openapi.yaml -o docs/openapi/bundle.yaml",
     "start:dev": "nest start --watch",
-    "start": "nest start be"
+    "start": "nest start be",
+    "build:be": "nest build be",
+    "start:prod": "node dist/apps/be/main.js"
   }
 }
