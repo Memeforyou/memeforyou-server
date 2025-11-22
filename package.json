@@ -31,7 +31,9 @@
     "docs:bundle": "redocly bundle docs/openapi/openapi.yaml -o docs/openapi/bundle.yaml",
     "start:dev": "nest start --watch",
     "start": "nest start be",
-    "build:be": "nest build be",
-    "start:prod": "node dist/apps/be/main.js"
+    "build": "nest build be",
+    "start:prod": "node dist/apps/be/main.js",
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate"
   }
 }
