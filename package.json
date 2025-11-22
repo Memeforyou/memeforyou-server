@@ -30,6 +30,8 @@
     "types:gen": "openapi-typescript docs/openapi/openapi.yaml -o apps/be/src/types/api.d.ts",
     "docs:bundle": "redocly bundle docs/openapi/openapi.yaml -o docs/openapi/bundle.yaml",
     "start:dev": "nest start --watch",
-    "start": "nest start be"
+    "start": "nest start be",
+    "build:be": "nest build be",
+    "start:prod": "node dist/apps/be/main.js"
   }
 }
