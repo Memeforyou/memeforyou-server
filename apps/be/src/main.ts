@@ -15,6 +15,7 @@ async function bootstrap() {
       forbidNonWhitelisted: false,
     })
   );
+  const port = process.env.PORT || 3000;
 
   const config = new DocumentBuilder()
     .setTitle("memeforyou API")
@@ -25,6 +26,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api-docs", app, document);
 
-  await app.listen(appConfig().port);
+  await app.listen(port);
 }
 bootstrap();
