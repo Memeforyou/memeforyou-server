@@ -10,7 +10,7 @@
       "entryFile": "main",
       "compilerOptions": {
         "tsConfigPath": "apps/be/tsconfig.json",
-        "deleteOutDir": true,
+        "deleteOutDir": false,
         "assets": [],
         "watchAssets": false
       }
