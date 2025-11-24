@@ -1,7 +1,7 @@
 import asyncio
 import json
 from prisma import Prisma, register
-from prisma.models import tag, image
+from prisma.models import Tag, Image
 from loguru import logger
 
 # Define seed file paths
@@ -48,7 +48,7 @@ async def seed_tags(db: Prisma, path):
 
     # Insert operations
     for idx, row in enumerate(data, start=1):
-        await tag.prisma(db).create(data=row)
+        await Tag.prisma(db).create(data=row)
         logger.trace(f"Seeded Tag {idx}/{total}: {row.get('tag_name')}")
         count += 1
 
@@ -64,7 +64,7 @@ async def seed_images(db: Prisma, path):
 
     # Insert operations
     for idx, row in enumerate(data, start=1):
-        await image.prisma(db).create(data=row)
+        await Image.prisma(db).create(data=row)
         logger.trace(f"Seeded Image {idx}/{total}")
         count += 1
 

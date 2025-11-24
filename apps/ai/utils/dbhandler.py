@@ -1,5 +1,5 @@
 from prisma import Prisma, register
-from prisma.models import tag, image, embedding
+from prisma.models import Tag, Image, Embedding
 from .schema import ImageTrivial
 from typing import List
 
