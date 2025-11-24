@@ -1,5 +1,7 @@
 import json
+import asyncio
 from google import genai
+from google.genai import types
 from google.cloud import firestore
 from google.cloud.firestore_v1.base_vector_query import DistanceMeasure
 from google.cloud.firestore_v1.vector import Vector
@@ -73,18 +75,20 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
     """
     Makes a structured content generation call to the Gemini API.
     """
+
+    config = types.GenerateContentConfig(
+        system_instruction=sys_prompt,
+        response_mime_type="application/json",
+        response_schema=GeminiResponse
+    )
+
     try:
-        response = gemini_client.generate_content(
-            model="gemini-1.5-flash", # Using a fast and capable model
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash",
             contents=[sys_prompt, user_prompt],
-            generation_config={
-                "response_mime_type": "application/json",
-            },
+            config=config
         )
-        # The API already returns a JSON string when configured this way.
-        # We parse it and then validate with Pydantic.
-        response_json = json.loads(response.text)
-        return GeminiResponse.model_validate(response_json)
+        return response.text
     except Exception as e:
         logger.error(f"Gemini API call failed: {e}")
         return None
@@ -121,5 +125,5 @@ if __name__ == "__main__":
         query = input("\nEnter search text (or 'exit' to quit): ").strip()
         if query.lower() == "exit":
             break
-        result = final_eval(query)
+        result = asyncio.run(final_eval(query))
         print(result)
