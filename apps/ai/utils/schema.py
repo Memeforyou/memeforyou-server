@@ -11,6 +11,7 @@ class MemeMeta(BaseModel):
 # --- Models for search inference
 class IndvMemeReturn(BaseModel):
     image_id: int
+    rank: int
 
 class GeminiResponse(BaseModel):
     text: List[IndvMemeReturn]
