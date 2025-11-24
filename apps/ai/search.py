@@ -7,7 +7,7 @@ from google.cloud.firestore_v1.base_vector_query import DistanceMeasure
 from google.cloud.firestore_v1.vector import Vector
 from dotenv import load_dotenv
 from loguru import logger
-from utils.encoder import generate_embeddings
+from utils.encoder_gemini import generate_embedding_gemini
 from utils.dbhandler import get_meta
 from utils.schema import ImageTrivial, GeminiResponse
 from typing import List, Optional, Tuple
@@ -28,7 +28,10 @@ def vsearch_fs(user_input: str, k: int = 5) -> List[DocumentSnapshot]:
 
     ret = []
 
-    user_input_embedding = generate_embeddings([user_input])[0]
+    # Embed the user's query using the 'retrieval_query' task type for optimal search performance
+    user_input_embedding = generate_embedding_gemini(
+        texts=[user_input], task_type="RETRIEVAL_QUERY"
+    )[0]
 
     logger.info("Embedding acquired. Now performing vector search...")
 
