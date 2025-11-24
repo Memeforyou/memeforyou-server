@@ -1,6 +1,6 @@
 from prisma import Prisma, register
 from prisma.models import tag, image, embedding
-from apps.ai.utils.schema import ImageTrivial
+from .schema import ImageTrivial
 from typing import List
 
 db = Prisma()
@@ -21,7 +21,8 @@ async def get_meta(inputs: List[int]) -> List[ImageTrivial]:
             }
         )
 
-        t_image = ImageTrivial(image_id=i_image['image_id'], caption=i_image['caption'])
-        rets.append(t_image)
+        if i_image:
+            t_image = ImageTrivial(image_id=i_image.image_id, caption=i_image.caption)
+            rets.append(t_image)
 
     return rets
