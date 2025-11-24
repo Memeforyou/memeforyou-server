@@ -1,6 +1,7 @@
 .*
 !.gitignore
 !.python-version
+!.env.example
 output*
 model/
 
