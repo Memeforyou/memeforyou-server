@@ -1,25 +1,10 @@
-# import search
-from pydantic import BaseModel, Field
 from fastapi import FastAPI
-from typing import List
+from loguru import logger
+from search import final_eval
+from utils.schema import InputData, FullRecReturn
 
 # Initialize FastAPI app
 app = FastAPI(title="memeforyou AI API - GDGoC KU 2025 worktree")
-
-# User input data class
-class InputData(BaseModel):
-    text: str = Field(..., examples=['늦잠 자서 수업을 째 버렸어'], description="유저 텍스트 입력 값")
-    count: int = Field(..., examples=[5, 10], description="반환받을 밈 개수")
-
-# Individual meme to be included in full response
-class IndvRec(BaseModel):
-    image_id: int
-    rank: int
-
-# Full response class definition
-class FullRecReturn(BaseModel):
-    count: int
-    recommendations: list["IndvRec"]
 
 @app.post("/ai/similar",
           response_model=FullRecReturn,
@@ -27,20 +12,19 @@ class FullRecReturn(BaseModel):
           description="")
 async def search_meme(request: InputData):
 
-    # Recommendation list; will call corresponding search.py function
-    # for now, dummy data
-    rec_list = [
-        IndvRec(image_id=1, rank=1),
-        IndvRec(image_id=2, rank=2),
-        IndvRec(image_id=3, rank=3),
-        IndvRec(image_id=4, rank=4),
-        IndvRec(image_id=5, rank=5),
-    ]
+    logger.info(f"Recognized request: {request.count} results with {request.text}")
+
+    search_response = await final_eval(request.text, request.count)
 
     # Construct return
     result = FullRecReturn(
-        count=len(rec_list),
-        recommendations=rec_list
+        count=len(search_response.text),
+        recommendations=search_response.text
     )
+
+    if result:
+        logger.success(f"Successfully acquired recommendations.")
+    else:
+        logger.error(f"Failed to acquire recommendations.")
 
     return result
