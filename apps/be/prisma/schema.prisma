@@ -44,7 +44,7 @@ model ImageTag {
 } 
 
 model Embedding {
-  vector Unsupported("VECTOR(1536)")
+  vector Unsupported("VECTOR(768)")
   image_id Int @id
   image Image @relation(fields: [image_id], references: [image_id], onDelete: Cascade)
 }
