@@ -1,112 +1,72 @@
 from google import genai
-from pydantic import BaseModel
+from google.cloud import firestore
+from google.cloud.firestore_v1.base_vector_query import DistanceMeasure
+from google.cloud.firestore_v1.vector import Vector
 from dotenv import load_dotenv
-import os
-import json
-import numpy as np
-from sentence_transformers import SentenceTransformer
+from loguru import logger
+from apps.ai.utils.encoder import generate_embeddings
+from typing import List, Optional
+from apps.ai.utils.schema import ImageTrivial
 
 load_dotenv()
 
-client = genai.Client()
-
-# Final selection prompt
-prompt = """
-SOMEPROMPT
-"""
+# Define clients
+firestore_client = firestore.Client(database="gdg-ku-meme4you-test")
+gemini_client = genai.Client()
+firestore_collection = firestore_client.collection("embeddings_test")
 
 # Config
 metadata_dir = "./" # Remnant from local prototype
 embedding_output = "meme_embeddings.json" # Remnant from local prototype
-embedding_model = "all-MiniLM-L6-v2" # Subject to change for multilingual or Korean model
-MODEL_PATH = "./models/"
-top_n = 5
 
-model = SentenceTransformer(embedding_model)
+# Function for firebase vector search
+def vsearch_fs(user_input: str, k: int = 5):
 
-# Check if model exists locally and download if it is not
-# Possibly subject to be moved to a seperate util module
-if os.path.exists(MODEL_PATH) and True:
+    ret = []
+
+    user_input_embedding = generate_embeddings([user_input])[0]
+
+    results = firestore_collection.find_nearest(
+        vector_field="vector",
+        query_vector=Vector(user_input_embedding),
+        distance_measure=DistanceMeasure.COSINE,
+        limit=k
+    )
+
+    for result in results.stream():
+        ret.append(result)
+
+    return ret
+
+# Function to return the prompt for final Gemini selection
+def get_prompt(cnt: int, images: List[ImageTrivial]):
+
+    prompt = f"""
+너는 이용자의 상황에 딱 맞는 밈을 추천해주는데 통달한 유머러스하고 재치있는 조언자야.
+
+제시된 후보 밈 중에서, 이용자의 상황 및 맥락에 가장 적절하게 적용될 수 있는 밈 상위 {cnt}개를 선정해.
+선정한 {cnt}개의 밈을 가장 적절한 순서대로 아래 JSON 형식으로 반환해.
+
+{{"text": [
+    {{"image_id": <id of the best fitting meme image>}},
+    {{"image_id": <id of the second best fitting meme image>}},
+    ...,
+    {{"image_id": <id of the {cnt}th best fitting meme image>}}
+]}}
+"""
+    
+    candidates_str = ""
+    
+    return prompt
+
+def gemini_call(prompt: str):
     pass
-else:
-    pass
-
-# Function for cosine calculation
-def cosine_similarity(a, b):
-    a = a / np.linalg.norm(a)
-    b = b / np.linalg.norm(b)
-    return float(np.dot(a, b))
-
-# Function for building embedding file
-# Currently for prototype, we need adapter for Prisma DB
-# Subject to be moved to prep module altogether per purpose
-def build_embeddings():
-    all_items = []
-    json_files = [f for f in os.listdir(metadata_dir) if f.startswith("metadata_batch_") and f.endswith(".json")]
-
-    print(f"Found {len(json_files)} metadata batch files.")
-
-    for fname in json_files:
-        with open(os.path.join(metadata_dir, fname), "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        for img_name, content in data.items():
-            combined_text = " ".join([
-                content.get("ocr", ""),
-                content.get("caption", ""),
-                content.get("humor", "")
-            ]).strip()
-
-            if not combined_text:
-                continue
-
-            emb = model.encode(combined_text).astype(np.float32).tolist()
-
-            all_items.append({
-                "file": img_name,
-                "text": combined_text,
-                "embedding": emb
-            })
-
-    with open(embedding_output, "w", encoding="utf-8") as f:
-        json.dump(all_items, f, ensure_ascii=False, indent=2)
-
-    print(f"Embedded {len(all_items)} memes saved to {embedding_output}")
-
-# Function for initial cosine search
-def find_topn(query, top_n=top_n):
-
-    # Identify embedding & open file
-    # Currently for prototype; we need an adapter for Prisma DB
-    if not os.path.exists(embedding_output):
-        print("Embedding file not found. Run build_embeddings() first.")
-        return
-    with open(embedding_output, "r", encoding="utf-8") as f:
-        memes = json.load(f)
-
-    query_emb = model.encode(query)
-    query_emb = query_emb / np.linalg.norm(query_emb)
-
-    sims = []
-    for m in memes:
-        emb = np.array(m["embedding"], dtype=np.float32)
-        emb = emb / np.linalg.norm(emb)
-        sim = np.dot(query_emb, emb)
-        sims.append((sim, m))
-
-    sims.sort(key=lambda x: x[0], reverse=True)
-    top_results = sims[:top_n]
-
-    print(f"\nTop {top_n} similar memes for: \"{query}\"\n")
-    for rank, (sim, m) in enumerate(top_results, 1):
-        print(f"{rank}. {m['file']} — Similarity: {sim:.4f}")
-        print(f"   Text: {m['text'][:150]}{'...' if len(m['text']) > 150 else ''}")
-        print("-" * 60)
-
-    # Return type shall be changed to properly return to main.py for API endpoint
 
 # Function for final evaluation request to Gemini
-def final_eval():
+def final_eval(user_input: str):
+
+    init_candidates_id: List[int] = vsearch_fs(user_input=user_input)
+
     pass
 
 # For testing
@@ -116,4 +76,4 @@ if __name__ == "__main__":
         query = input("\nEnter search text (or 'exit' to quit): ").strip()
         if query.lower() == "exit":
             break
-        find_topn(query)
+        vsearch_fs(query)
