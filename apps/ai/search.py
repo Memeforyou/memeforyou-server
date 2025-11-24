@@ -104,15 +104,19 @@ async def final_eval(user_input: str, k: int = 10, final_cnt: int = 5) -> Option
     # 1. Get initial candidates from Firestore vector search
     vsearch_results = vsearch_fs(user_input=user_input, k=k)
     candidate_ids = [res.to_dict()['image_id'] for res in vsearch_results if 'image_id' in res.to_dict()]
-    
+    logger.info("Vector search complete.")
+
     # 2. Get metadata (captions) for the candidates
     # Note: get_meta is an async function, but we'll call it synchronously for simplicity here.
     # In a real FastAPI app, this should be handled with `await`.
     candidate_images = await get_meta(candidate_ids)
+    logger.info("Metadata retrieval for candidates complete.")
 
     # 3. Prepare prompts and call Gemini
     sys_prompt, user_prompt = get_prompt(cnt=final_cnt, images=candidate_images)
+    logger.info("Prompt ready. Now calling Gemini...")
     gemini_response = gemini_call(sys_prompt=sys_prompt, user_prompt=user_prompt)
+    logger.success("Final evaluation complete.")
     
     return gemini_response
 
