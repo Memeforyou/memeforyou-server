@@ -42,6 +42,8 @@ def download_image(url: str, save_dir: str = SAVE_DIR):
 
         # Get original image format and convert to lower-case extension
         ext = image.format.lower()
+        if str(ext) == 'jpeg':
+            ext = 'jpg'
         filename = os.path.join(save_dir, f"{img_hash}.{ext}")
         image.save(filename)
         return filename, img_hash
@@ -141,7 +143,7 @@ def main():
         seen_hashes.add(img_hash)
 
         metadata_list.append({
-            "id": idx,
+            "fname": img_hash,
             "original_url": orig_url,
             "src_url": src_url
         })
