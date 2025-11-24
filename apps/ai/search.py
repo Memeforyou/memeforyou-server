@@ -95,7 +95,13 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
             contents=[sys_prompt, user_prompt],
             config=config
         )
-        return response.text
+        # The response.text is a JSON string. We need to parse it into our Pydantic model.
+        if response.text:
+            parsed_response = GeminiResponse.model_validate_json(response.text)
+            return parsed_response
+        else:
+            logger.error(f"Gemini response parsing failed.")
+            return None
     except Exception as e:
         logger.error(f"Gemini API call failed: {e}")
         return None
