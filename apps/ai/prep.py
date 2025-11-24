@@ -7,6 +7,7 @@ import time
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any
+from ai.utils.schema import MemeMeta
 from PIL import Image
 from loguru import logger
 
@@ -45,12 +46,6 @@ else:
 # load model once (from local path)
 embedding_model = SentenceTransformer(LOCAL_MODEL_DIR)
 logger.info("Embedding model ready.")
-
-# Define response format for Gemini Structured Response
-class MemeMeta(BaseModel):
-    ocr: str
-    caption: str
-    humor: str
 
 # Function for query per image
 def process_image(img_path):
