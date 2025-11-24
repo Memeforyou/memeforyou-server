@@ -2,7 +2,6 @@
 !.gitignore
 !.python-version
 output*
-uv.lock
 model/
 
 # Python-generated files
