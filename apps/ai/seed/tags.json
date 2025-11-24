@@ -1,0 +1,9 @@
+[
+    {"tag_id": 1, "tag_name": "웃긴"},
+    {"tag_id": 2, "tag_name": "슬픈"},
+    {"tag_id": 3, "tag_name": "귀여운"},
+    {"tag_id": 4, "tag_name": "동물"},
+    {"tag_id": 5, "tag_name": "사람"},
+    {"tag_id": 6, "tag_name": "카툰"},
+    {"tag_id": 7, "tag_name": "캐릭터"}
+]
