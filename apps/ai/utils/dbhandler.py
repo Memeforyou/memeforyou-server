@@ -1,6 +1,6 @@
 from prisma import Prisma, register
 from prisma.models import tag, image, embedding
-from schema import ImageTrivial
+from apps.ai.utils.schema import ImageTrivial
 from typing import List
 
 db = Prisma()
