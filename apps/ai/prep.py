@@ -5,9 +5,9 @@ import os
 import json
 import time
 import numpy as np
-from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any
-from ai.utils.schema import MemeMeta
+from .utils.schema import MemeMeta
+from .utils.encoder_gemini import generate_embedding_gemini
 from PIL import Image
 from loguru import logger
 
@@ -24,28 +24,6 @@ PROMPT = """
 METADATA_OUTPUT = "./.seed_json_tmp/images.json"
 EMBEDDING_OUTPUT = "./.seed_json_tmp/embeddings.json"
 IMAGE_DIR = "./.seed_images"
-
-EMBEDDING_MODEL = "snunlp/KR-SBERT-V40K-klueNLI-augSTS"
-MODEL_ROOT = "./.models"
-
-# ensure root cache dir exists
-os.makedirs(MODEL_ROOT, exist_ok=True)
-
-# local folder name for the model (replace "/" with "__")
-LOCAL_MODEL_DIR = os.path.join(MODEL_ROOT, EMBEDDING_MODEL.replace("/", "__"))
-
-# download once if missing, otherwise load from disk
-if not os.path.exists(LOCAL_MODEL_DIR):
-    logger.warning(f"Model not found locally. Downloading {EMBEDDING_MODEL} ...")
-    model_tmp = SentenceTransformer(EMBEDDING_MODEL)   # this downloads from HF
-    model_tmp.save(LOCAL_MODEL_DIR)                    # persist to local cache
-    logger.success(f"Model downloaded and saved to: {LOCAL_MODEL_DIR}")
-else:
-    logger.info(f"Loading embedding model from local cache: {LOCAL_MODEL_DIR}")
-
-# load model once (from local path)
-embedding_model = SentenceTransformer(LOCAL_MODEL_DIR)
-logger.info("Embedding model ready.")
 
 # Function for query per image
 def process_image(img_path):
@@ -227,7 +205,8 @@ def build_embeddings():
         if not caption:
             continue
 
-        emb = embedding_model.encode(caption).astype(np.float32).tolist()
+        emb = generate_embedding_gemini([caption], task_type="RETRIEVAL_DOCUMENT")[0]
+        emb = emb.tolist()
 
         output.append({
             "image_id": item["image_id"],
