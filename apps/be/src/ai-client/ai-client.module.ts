@@ -1,13 +1,11 @@
 import { Module } from "@nestjs/common";
-import { AiClientController } from "./ai-client.controller";
 import { AiClientService } from "./ai-client.service";
 import { HttpModule } from "@nestjs/axios";
-import { ConfigService } from "@nestjs/config";
 
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 15000, // 15초
+      timeout: 60000, // 60초
       maxRedirects: 5,
     }),
   ],
