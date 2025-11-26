@@ -41,7 +41,7 @@ export class AiClientService {
     try {
       const response = await firstValueFrom(
         this.httpService.post<AiSimilarSearchResponse>(
-          `http://localhost:8000/ai/similar`,
+          `https://memeforyou-server-production.up.railway.app/ai/similar`,
           { text: req.query, count: 10 }
         )
       );
