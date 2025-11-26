@@ -6,20 +6,6 @@ import { ConfigService } from "@nestjs/config";
 
 @Module({
   imports: [
-    HttpModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        baseURL: configService.get("AI_BASE_URL"),
-        timeout: 5000,
-      }),
-    }),
-  ],
-  exports: [AiClientService],
-  controllers: [AiClientController],
-  providers: [AiClientService],
-})
-@Module({
-  imports: [
     HttpModule.register({
       timeout: 15000, // 15초
       maxRedirects: 5,
