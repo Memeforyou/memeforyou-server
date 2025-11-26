@@ -25,4 +25,6 @@ async def get_meta(inputs: List[int]) -> List[ImageTrivial]:
             t_image = ImageTrivial(image_id=i_image.image_id, caption=i_image.caption)
             rets.append(t_image)
 
+    await db.disconnect()
+
     return rets
