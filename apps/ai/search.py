@@ -9,13 +9,14 @@ from dotenv import load_dotenv
 from loguru import logger
 from utils.encoder_gemini import generate_embedding_gemini
 from utils.dbhandler import get_meta
+from utils.gauth import get_client
 from utils.schema import ImageTrivial, GeminiResponse
 from typing import List, Optional, Tuple
 
 load_dotenv()
 
 # Define clients & models
-firestore_client = firestore.Client(database="gdg-ku-meme4you-test")
+firestore_client = get_client(database="gdg-ku-meme4you-test")
 gemini_client = genai.Client()
 firestore_collection = firestore_client.collection("embeddings_test")
 
