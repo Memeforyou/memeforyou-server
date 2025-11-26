@@ -18,4 +18,14 @@ import { ConfigService } from "@nestjs/config";
   controllers: [AiClientController],
   providers: [AiClientService],
 })
+@Module({
+  imports: [
+    HttpModule.register({
+      timeout: 15000, // 15초
+      maxRedirects: 5,
+    }),
+  ],
+  providers: [AiClientService],
+  exports: [AiClientService],
+})
 export class AiClientModule {}
