@@ -59,10 +59,18 @@ export class ImageService {
     if (!image) {
       throw new NotFoundException("Image not found");
     }
-    await this.prisma.image.update({
-      where: { image_id: imageId },
-      data: { like_cnt: { decrement: 1 } },
-    });
+    if (image.like_cnt <= 0) {
+      await this.prisma.image.update({
+        where: { image_id: imageId },
+        data: { like_cnt: 0 },
+      });
+    } else {
+      await this.prisma.image.update({
+        where: { image_id: imageId },
+        data: { like_cnt: { decrement: 1 } },
+      });
+    }
+
     return image;
   }
 

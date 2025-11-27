@@ -47,7 +47,7 @@ export class ImageController {
     return await this.imageService.likeImage(imageId);
   }
 
-  @Delete(":image_id/like")
+  @Delete(":image_id/unlike")
   async unlikeImage(@Param("image_id") imageId: number) {
     return await this.imageService.unlikeImage(imageId);
   }
