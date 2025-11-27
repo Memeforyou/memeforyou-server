@@ -48,11 +48,11 @@ export class ImageService {
     if (!image) {
       throw new NotFoundException("Image not found");
     }
-    await this.prisma.image.update({
+    const updatedImage = await this.prisma.image.update({
       where: { image_id: imageId },
       data: { like_cnt: { increment: 1 } },
     });
-    return image;
+    return updatedImage;
   }
   async unlikeImage(imageId: number) {
     const image = await this.getImageById(imageId);
@@ -60,18 +60,18 @@ export class ImageService {
       throw new NotFoundException("Image not found");
     }
     if (image.like_cnt <= 0) {
-      await this.prisma.image.update({
+      const updatedImage = await this.prisma.image.update({
         where: { image_id: imageId },
         data: { like_cnt: 0 },
       });
+      return updatedImage;
     } else {
-      await this.prisma.image.update({
+      const updatedImage = await this.prisma.image.update({
         where: { image_id: imageId },
         data: { like_cnt: { decrement: 1 } },
       });
+      return updatedImage;
     }
-
-    return image;
   }
 
   async getPopularImages() {
