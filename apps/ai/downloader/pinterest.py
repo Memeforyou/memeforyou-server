@@ -114,7 +114,7 @@ def search_pinterest_images(keywords: list[str], total_results: int = 50, date_r
     return results
 
 # Main pipeline
-def run_pinterest_crawl():
+def run_pinterest_scrape(start_id: int, max_results: int = 10000) -> int:
     keywords = ["밈", "웃긴 짤", "재밌는 짤", "유머 짤"]
     total_per_keyword = 50
     seen_urls = set()
@@ -159,4 +159,4 @@ def run_pinterest_crawl():
     logger.info(f"Metadata JSON saved to '{META_JSON}'.")
 
 if __name__ == "__main__":
-    run_pinterest_crawl()
+    run_pinterest_scrape()
