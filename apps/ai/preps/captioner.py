@@ -112,6 +112,9 @@ def caption_rows(target_rows: list, base_path: str) -> List[IndvCaption]:
     return local_captioned_rows
 
 def caption_converter(before_rows: List[IndvCaption]) -> Tuple[List[int], List[str], List[List[str]]]:
+    """
+    Convert the list of IndvCaption into updater compatible format
+    """
 
     ids: List[int] = []
     captions: List[str] = []
