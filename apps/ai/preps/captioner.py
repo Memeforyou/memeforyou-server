@@ -1,7 +1,9 @@
 from google import genai
 from google.genai import types
+from sqlite3 import Row
 from ai.utils.schema import IndvCaption, BatchCaption
 from .dblite import get_memes, update_captioned
+from itertools import batched
 from loguru import logger
 from dotenv import load_dotenv
 from os import getenv
@@ -56,11 +58,10 @@ def gemini_caption(sys_prompt: str, available_tags: List[str], img_path: str) ->
     except Exception as e:
         logger.error(f"Gemini API call failed: {e}")
         return None
-
-def caption_rows() -> List[IndvCaption]:
+    
+def fetch_and_batch(n: int = 100) -> List[List[Row]]:
     """
-    Fetches 'PENDING' memes, generates captions for them,
-    and returns a list of IndvCaption containing the image_id, caption, and tags.
+    Fetches 'PENDING' memes, and puts them into batches for fail-safe captioning.
     """
     logger.info("Fetching 'PENDING' memes for embedding...")
     target_rows = get_memes(status="PENDING")
@@ -69,8 +70,33 @@ def caption_rows() -> List[IndvCaption]:
         logger.warning("No memes with status 'PENDING' found.")
         return []
     
-    logger.info(f"Found {len(target_rows)} memes to caption.")
+    logger.info(f"Found {len(target_rows)} memes to caption. Now batching...")
 
+    batches = [list(batch) for batch in batched(target_rows, n)]
+
+    return batches
+
+def caption_rows(target_rows: list) -> List[IndvCaption]:
+    """
+    Generates captions for input rows of memes,
+    and returns a list of IndvCaption containing the image_id, caption, and tags.
+    """
+
+    captioned_rows = []
+
+    # Perform gemini_caption on provided batch
     pass
 
-    return
+    return captioned_rows
+
+def captioner_operation() -> None:
+
+    captioned_rows = caption_rows()
+
+    if captioned_rows:
+        update_captioned()
+    else:
+        logger.warning("No captioned rows returned by caption_rows.")
+
+if __name__ == "__main__":
+    captioner_operation()
