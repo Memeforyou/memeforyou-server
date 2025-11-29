@@ -1,7 +1,7 @@
 from PIL import Image
 from loguru import logger
-from ai.downloader.instagram import run_instagram_scrape
-from ai.downloader.pinterest import run_pinterest_scrape
+from .instagram import run_instagram_scrape
+from .neo_pinterest import run_pinterest_scrape
 from ai.preps.dblite import add_meme
 
 def managed_download():
@@ -11,22 +11,22 @@ def managed_download():
     id_counter = 1
 
     # Run instagram download
-    logger.info(f"Running Instagram crawl... (with beginning id {id_counter})")
+    logger.info(f"Running Instagram scraping... (with beginning id {id_counter})")
     try: 
         after_id = run_instagram_scrape(start_id=id_counter)
         logger.success(f"Successfully downloaded from Instagram; {after_id-id_counter} images.")
         id_counter = after_id
     except Exception as e:
-        logger.error(f"Instagram crawl failed: {e}")
+        logger.error(f"Instagram scraping failed: {e}")
 
     # Run Pinterest download
-    logger.info(f"Running Pinterest crawl... (with beginning id {id_counter})")
+    logger.info(f"Running Pinterest scraping... (with beginning id {id_counter})")
     try:
         after_id = run_pinterest_scrape(start_id=id_counter)
         logger.success(f"Successfully downloaded from Pinterest; {after_id-id_counter} images.")
         id_counter = after_id
     except Exception as e:
-        logger.error(f"Pinterest crawl failed: {e}")
+        logger.error(f"Pinterest scraping failed: {e}")
 
 if __name__ == "__main__":
     managed_download()
