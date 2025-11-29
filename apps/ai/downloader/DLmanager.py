@@ -2,7 +2,6 @@ import os
 import json
 from PIL import Image
 from loguru import logger
-
 from ai.downloader.instagram import run_instagram_crawl
 from ai.downloader.pinterest import run_pinterest_crawl
 from ai.preps.dblite import add_meme
@@ -49,7 +48,7 @@ def register_metadata_to_db(save_dir: str, metadata: list[dict]):
         )
         logger.info(f"Registered image_id={image_id}, file={img_path}")
 
-def run_all():
+def managed_download():
     # 1) 크롤링 단계
     logger.info("Running Instagram crawl...")
     run_instagram_crawl()
@@ -69,4 +68,4 @@ def run_all():
     logger.success("DLmanager processing completed.")
 
 if __name__ == "__main__":
-    run_all()
+    managed_download()
