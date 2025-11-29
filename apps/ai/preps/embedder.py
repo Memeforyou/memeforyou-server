@@ -41,11 +41,12 @@ def embed_rows() -> List[IndvVector]:
     logger.success(f"Successfully generated {len(embedding_data)} embeddings.")
     return embedding_data
 
-def upload_firestore(embeddings: List[IndvVector]) -> None:
+def upload_firestore(embeddings: List[IndvVector]) -> List[int]:
 
+    processed_ids: List[int] = []
     if not PROJECT_ID:
         logger.error("GOOGLE_PROJECT_ID environment variable is not set.")
-        return
+        return processed_ids
 
     try:
 
@@ -61,20 +62,20 @@ def upload_firestore(embeddings: List[IndvVector]) -> None:
 
         for i, item in enumerate(embeddings):
 
-            # Check if 'vector' field exists and is a list
-            if 'vector' in item and isinstance(item['vector'], list):
+            # Check if vector field exists and is a list
+            if item.get("vector") and isinstance(item["vector"], list):
 
                 # Firestore Vector search requires the use of the Vector wrapper type
-                vector_data = Vector(item['vector'])
+                vector_data = Vector(item["vector"])
                 
                 # Prepare the document data dictionary
-                doc_id = str(item.get('image_id', f'doc_{i}'))
+                doc_id = str(item.get("image_id", f"doc_{i}"))
                 
                 document_data = {
-                    "image_id": item.get('image_id'),
+                    "image_id": item.get("image_id"),
                     "vector": vector_data
                 }
-
+                processed_ids.append(item.get("image_id"))
                 doc_ref = collection_ref.document(doc_id)
                 batch.set(doc_ref, document_data)
 
@@ -92,7 +93,26 @@ def upload_firestore(embeddings: List[IndvVector]) -> None:
             logger.info(f"Committed final batch (Total: {len(embeddings)})")
 
         logger.success("\nAll vector data successfully uploaded to Firestore.")
+        return processed_ids
 
     except Exception as e:
 
         logger.error(f"Error during uploading vectors to Firestore: {e}")
+        return processed_ids
+
+def embedder_operation() -> None:
+
+    embeddings = embed_rows()
+
+    if embeddings:
+        processed_ids = upload_firestore(embeddings)
+    else:
+        logger.warning("No embeddings to upload.")
+
+    if processed_ids:
+        update_ready(processed_ids)
+    else:
+        logger.warning("There are no processed_ids returned by upload_firestore.")
+
+if __name__ == "__main__":
+    embedder_operation()
