@@ -3,9 +3,9 @@ import json
 from PIL import Image
 from loguru import logger
 
-from apps.ai.downloader.instagram import run_instagram_crawl
-from apps.ai.downloader.pinterest import run_pinterest_crawl
-from apps.ai.preps.dblite import add_meme
+from ai.downloader.instagram import run_instagram_crawl
+from ai.downloader.pinterest import run_pinterest_crawl
+from ai.preps.dblite import add_meme
 
 BASE_DIR = os.path.dirname(__file__)
 SAVE_DIR = os.path.join(BASE_DIR, "output")
