@@ -17,7 +17,7 @@ PROJECT_ID = getenv("GOOGLE_PROJECT_ID")
 def embed_rows() -> List[IndvVector]:
     """
     Fetches 'CAPTIONED' memes, generates embeddings for their captions,
-    and returns a list of dictionaries containing the image_id and its vector.
+    and returns a list of IndvVector containing the image_id and its vector.
     """
     logger.info("Fetching 'CAPTIONED' memes for embedding...")
     target_rows = get_memes(status="CAPTIONED")
