@@ -13,7 +13,9 @@ class MemeMeta(BaseModel):
 # Caption for each meme
 class IndvCaption(BaseModel):
     image_id: int
+    ocr: str
     caption: str
+    humor: str
     tags: List[str]
 
 class BatchCaption(BaseModel):
