@@ -1,4 +1,5 @@
 from ai.utils.encoder_gemini import generate_embedding_gemini
+from ai.utils.schema import IndvVector
 from .dblite import get_memes, update_ready
 from google.cloud import firestore
 from google.cloud.firestore_v1.vector import Vector
@@ -13,9 +14,7 @@ COLLECTION_NAME = "embeddings_test"
 DB_ID = "gdg-ku-meme4you-test"
 PROJECT_ID = getenv("GOOGLE_PROJECT_ID")
 
-db = firestore.Client(project=PROJECT_ID, database=DB_ID)
-
-def embed_rows() -> List[Dict[str, Any]]:
+def embed_rows() -> List[IndvVector]:
     """
     Fetches 'CAPTIONED' memes, generates embeddings for their captions,
     and returns a list of dictionaries containing the image_id and its vector.
@@ -41,3 +40,59 @@ def embed_rows() -> List[Dict[str, Any]]:
 
     logger.success(f"Successfully generated {len(embedding_data)} embeddings.")
     return embedding_data
+
+def upload_firestore(embeddings: List[IndvVector]) -> None:
+
+    if not PROJECT_ID:
+        logger.error("GOOGLE_PROJECT_ID environment variable is not set.")
+        return
+
+    try:
+
+        # Connect to Firestore DB
+        db = firestore.Client(project=PROJECT_ID, database=DB_ID)
+        collection_ref = db.collection(COLLECTION_NAME)
+
+        logger.success(f"Successfully connected to Firestore Project '{PROJECT_ID}' and Database '{DB_ID}'.")
+        logger.info(f"Targeting collection: {COLLECTION_NAME}")
+
+        batch = db.batch()
+        batch_size = 500
+
+        for i, item in enumerate(embeddings):
+
+            # Check if 'vector' field exists and is a list
+            if 'vector' in item and isinstance(item['vector'], list):
+
+                # Firestore Vector search requires the use of the Vector wrapper type
+                vector_data = Vector(item['vector'])
+                
+                # Prepare the document data dictionary
+                doc_id = str(item.get('image_id', f'doc_{i}'))
+                
+                document_data = {
+                    "image_id": item.get('image_id'),
+                    "vector": vector_data
+                }
+
+                doc_ref = collection_ref.document(doc_id)
+                batch.set(doc_ref, document_data)
+
+                # Commit the batch if the limit is reached
+                if (i + 1) % batch_size == 0:
+                    batch.commit()
+                    logger.info(f"Committed batch of {batch_size} documents (Total: {i + 1})")
+                    batch = db.batch()
+            else:
+                logger.info(f"Skipping item {i}: 'vector' field is missing or invalid.")
+
+        # Commit the final batch
+        if batch._write_pbs: # Check if there are any remaining writes in the batch
+            batch.commit()
+            logger.info(f"Committed final batch (Total: {len(embeddings)})")
+
+        logger.success("\nAll vector data successfully uploaded to Firestore.")
+
+    except Exception as e:
+
+        logger.error(f"Error during uploading vectors to Firestore: {e}")
