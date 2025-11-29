@@ -10,6 +10,10 @@ class MemeMeta(BaseModel):
     humor: str
     tags: List[str]
 
+class IndvVector(BaseModel):
+    image_id: int
+    vector: List[float]
+
 # --- Models for search inference
 class IndvMemeReturn(BaseModel):
     image_id: int
