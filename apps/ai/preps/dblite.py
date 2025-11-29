@@ -30,30 +30,31 @@ def get_memes(status: str) -> List[sqlite3.Row]:
     return cursor.fetchall()
 
 # For captioner.py
-def update_captioned(image_id: int, caption: str, tags: List[str]) -> None:
+def update_captioned(image_ids: List[int], captions: List[str], tags_list: List[List[str]]) -> None:
     """
-    Updates a meme with caption and tags, and sets status to CAPTIONED.
+    Updates memes with captions and tags, and sets their status to CAPTIONED.
     Called by the captioner module.
     """
     # Update caption and status in Image table
-    cursor.execute(
-        "UPDATE Image SET caption = ?, status = 'CAPTIONED' WHERE image_id = ?",
-        (caption, image_id)
+    update_data = [(caption, image_id) for caption, image_id in zip(captions, image_ids)]
+    cursor.executemany(
+        "UPDATE Image SET caption = ?, status = 'CAPTIONED' WHERE image_id = ?", update_data
     )
 
     # Insert tags into ImageTag table
-    tag_data = [(image_id, tag) for tag in tags]
+    all_tags_data = []
+    for image_id, tags in zip(image_ids, tags_list):
+        all_tags_data.extend([(image_id, tag) for tag in tags])
     cursor.executemany(
-        "INSERT INTO ImageTag (image_id, tag) VALUES (?, ?)",
-        tag_data
+        "INSERT INTO ImageTag (image_id, tag) VALUES (?, ?)", all_tags_data
     )
     conn.commit()
 
 # For embedder.py
-def update_ready(image_id: int) -> None:
+def update_ready(image_ids: List[int]) -> None:
     """
-    Updates a meme's status to READY.
+    Updates memes' status to READY in a batch.
     Called by the embedder module.
     """
-    cursor.execute("UPDATE Image SET status = 'READY' WHERE image_id = ?", (image_id,))
+    cursor.executemany("UPDATE Image SET status = 'READY' WHERE image_id = ?", [(id,) for id in image_ids])
     conn.commit()
