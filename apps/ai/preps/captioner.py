@@ -65,6 +65,7 @@ def fetch_and_batch(n: int = 100) -> List[List[Row]]:
     """
     Fetches 'PENDING' memes, and puts them into batches for fail-safe captioning.
     """
+
     logger.info("Fetching 'PENDING' memes for embedding...")
     target_rows = get_memes(status="PENDING")
 
@@ -131,7 +132,9 @@ def caption_converter(before_rows: List[IndvCaption]) -> Tuple[List[int], List[s
 
 
 def captioner_operation() -> None:
-
+    """
+    Overall captioner pipeline.
+    """
     # Acquire batches
     batches = fetch_and_batch()
 
