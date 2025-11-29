@@ -10,9 +10,9 @@ import os
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-# api_key = 'AIzaSyC2cVQj5A6MdmXD-PWQLuzbM5ySeNNp-vM'
-gemini_client = genai.Client(api_key=api_key)
 
+gemini_client = genai.Client(api_key=api_key)
+# gemini_client = genai.Client()
 
 SYSPROMPT = """
 밈 이미지에 대해서 [OCR, 캡션, 이 밈이 재미있는 이유 설명]과 [태그]들을 추출해.
