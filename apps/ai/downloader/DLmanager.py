@@ -49,12 +49,28 @@ def register_metadata_to_db(save_dir: str, metadata: list[dict]):
         logger.info(f"Registered image_id={image_id}, file={img_path}")
 
 def managed_download():
-    # 1) 크롤링 단계
-    logger.info("Running Instagram crawl...")
-    run_instagram_crawl()
 
-    # logger.info("Running Pinterest crawl...")
-    # run_pinterest_crawl() # CSE_API_KEY,CX_ID 필요
+    # Initialize image_id counter for id assignment coordination
+    # Indicates the id the next meme should be assigned
+    id_counter = 1
+
+    # Run instagram download
+    logger.info(f"Running Instagram crawl... (with beginning id {id_counter})")
+    try: 
+        after_id = run_instagram_crawl(start_id=id_counter)
+        logger.success(f"Successfully downloaded from Instagram; {after_id-id_counter} images.")
+        id_counter = after_id
+    except Exception as e:
+        logger.error(f"Instagram crawl failed: {e}")
+
+    # Run Pinterest download
+    logger.info(f"Running Pinterest crawl... (with beginning id {id_counter})")
+    try:
+        after_id = run_pinterest_crawl(start_id=id_counter)
+        logger.success(f"Successfully downloaded from Pinterest; {after_id-id_counter} images.")
+        id_counter = after_id
+    except Exception as e:
+        logger.error(f"Pinterest crawl failed: {e}")
 
     # 2) 메타데이터 로드 + DB insert
     inst_meta = load_metadata(INST_META_JSON)
