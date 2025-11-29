@@ -103,8 +103,11 @@ def caption_rows(target_rows: list, base_path: str) -> List[IndvCaption]:
         logger.trace(f"Acquired file path for {i}th image in this batch: ...{fname}. Now requesting...")
 
         res = gemini_caption(sys_prompt=SYSPROMPT, available_tags=AVAIL_TAGS, img_id=image_id, img_path=img_path)
-        local_captioned_rows.append(res)
-        logger.trace(f"{i}th image in this batch captioned and appended to return.")
+        if res:
+            local_captioned_rows.append(res)
+            logger.trace(f"{i}th image in this batch captioned and appended to return.")
+        else:
+            logger.warning(f"Skipping meme ID {image_id} in batch {first_meme_id}-{last_meme_id} due to captioning failure.")
 
     return local_captioned_rows
 
@@ -116,7 +119,9 @@ def caption_converter(before_rows: List[IndvCaption]) -> Tuple[List[int], List[s
 
     for row in before_rows:
         ids.append(row.image_id)
-        captions.append(row.caption)
+        # Combine ocr, caption, and humor into a single string for the database
+        full_caption = f"OCR: {row.ocr}, Caption: {row.caption}, Humor: {row.humor}"
+        captions.append(full_caption)
         tags.append(row.tags)
 
     return ids, captions, tags
@@ -124,26 +129,22 @@ def caption_converter(before_rows: List[IndvCaption]) -> Tuple[List[int], List[s
 
 def captioner_operation() -> None:
 
-    # Initialize update list
-    global_captioned_rows = []
-
     # Acquire batches
     batches = fetch_and_batch()
 
     # Iterate through batches
     for i, batch in enumerate(batches):
         
-        # Caption each batch
-        logger.debug(f"Beginning captioning for batch {i}...")
+        logger.info(f"Processing Batch {i+1}/{len(batches)} ---")
         this_batch_captions = caption_rows(target_rows=batch, base_path=BPATH)
-        global_captioned_rows.extend(this_batch_captions)
 
-    complete_id, compete_captions, complete_tags = caption_converter(before_rows=global_captioned_rows)
-
-    if global_captioned_rows:
-        update_captioned(image_ids=complete_id, captions=compete_captions, tags_list=complete_tags)
-    else:
-        logger.warning("No captioned rows returned by caption_rows.")
+        if this_batch_captions:
+            # Convert and update the database for this batch
+            image_ids, captions, tags_list = caption_converter(before_rows=this_batch_captions)
+            update_captioned(image_ids=image_ids, captions=captions, tags_list=tags_list)
+            logger.success(f"Successfully updated {len(image_ids)} memes in the database for batch {i+1}.")
+        else:
+            logger.warning(f"No rows were successfully captioned in batch {i+1}. Nothing to update.")
 
 if __name__ == "__main__":
     captioner_operation()
