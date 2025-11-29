@@ -12,7 +12,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       "http://localhost:3000", // 로컬 프론트
-      "https://네-프론트-프로덕션-도메인", // (있다면) 배포된 프론트 도메인
+      "https://692b07e425e5230008f2d68e--meme4you.netlify.app/",
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
