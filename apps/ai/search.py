@@ -96,7 +96,7 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
     try:
         response = gemini_client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[sys_prompt, user_prompt],
+            contents=user_prompt,
             config=config
         )
         # The response.text is a JSON string. We need to parse it into our Pydantic model.
