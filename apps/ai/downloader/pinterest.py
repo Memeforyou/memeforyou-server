@@ -14,8 +14,9 @@ load_dotenv()
 API_KEY = os.getenv("CSE_API_KEY")
 CX_ID = os.getenv("CX_ID")
 # Paths for seeding purpose run
-SAVE_DIR = "./.output_google"
-META_JSON = "./.output_google/metadata.json"
+BASE_DIR = os.path.dirname(__file__)
+SAVE_DIR = os.path.join(BASE_DIR, "output")
+META_JSON = os.path.join(SAVE_DIR, "metadata_pin.json")
 
 # Hash function for image
 def average_hash(image: Image.Image, hash_size: int = 8) -> str:
@@ -63,7 +64,9 @@ def search_pinterest_images(keywords: list[str], total_results: int = 50, date_r
     results = []
 
     # Query configs
-    search_query = f"site:pinterest.com ({' OR '.join(f'\"{kw}\"' for kw in keywords)})"
+    joined_keywords = ' OR '.join(f'"{kw}"' for kw in keywords)
+    search_query = "site:pinterest.com ({})".format(joined_keywords)
+
     logger.debug(f"search_query: {search_query}")
     url = "https://www.googleapis.com/customsearch/v1"
     start = 1
@@ -114,7 +117,7 @@ def search_pinterest_images(keywords: list[str], total_results: int = 50, date_r
     return results
 
 # Main pipeline
-def main():
+def run_pinterest_crawl():
     keywords = ["밈", "웃긴 짤", "재밌는 짤", "유머 짤"]
     total_per_keyword = 50
     seen_urls = set()
@@ -159,4 +162,4 @@ def main():
     logger.info(f"Metadata JSON saved to '{META_JSON}'.")
 
 if __name__ == "__main__":
-    main()
+    run_pinterest_crawl()

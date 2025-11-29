@@ -8,17 +8,17 @@ conn.row_factory = sqlite3.Row
 cursor = conn.cursor() 
 
 # For DLmanager.py
-def add_meme(original_url: str, width: int, height: int, src_url: str) -> int:
+def add_meme(original_url: str,img_path: str, width: int, height: int, src_url: str) -> int:
     """
     Adds a new meme to the database with PENDING status.
     Called by the downloader module.
     """
     cursor.execute(
         """
-        INSERT INTO Image (original_url, width, height, src_url, status)
-        VALUES (?, ?, ?, ?, 'PENDING')
+        INSERT INTO Image (original_url, img_path, width, height, src_url, status)
+        VALUES (?, ?, ?, ?, ?,'PENDING')
         """,
-        (original_url, width, height, src_url)
+        (original_url, img_path, width, height, src_url)
     )
     conn.commit()
     return cursor.lastrowid
@@ -105,6 +105,7 @@ def export_json(images_path: str, tags_path: str) -> None:
         # Construct the final image object for the JSON file
         image_dict = {
             "image_id": image_row['image_id'],
+            "image_path": image_row['img_path'],
             "original_url": image_row['original_url'],
             "src_url": image_row['src_url'],
             "cloud_url": image_row['cloud_url'],

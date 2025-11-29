@@ -8,6 +8,7 @@ cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS Image (
     image_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    img_path TEXT,
     original_url TEXT,
     like_cnt INTEGER DEFAULT 0,
     width INTEGER NOT NULL,
@@ -35,6 +36,6 @@ CREATE TABLE IF NOT EXISTS Tag (
 tags_to_insert = ["웃긴", "슬픈", "귀여운", "동물", "사람", "카툰", "캐릭터"]
 cursor.executemany(
     "INSERT OR IGNORE INTO Tag (tag_name) VALUES (?)",
-    tags_to_insert
+    [(t,) for t in tags_to_insert]
 )
 conn.commit()
