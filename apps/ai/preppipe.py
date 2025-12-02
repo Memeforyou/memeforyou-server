@@ -30,7 +30,16 @@ def main():
             sys.exit(0)
 
         try:
+            
             result = COMMANDS[choice]()
+
+            if result == 0:
+
+                questionary.print("Your chosen operation succeeded.", style="fg:green")
+
+            else:
+
+                questionary.print("Your chosen operation failed.", style="fg:red")
         
         except Exception as e:
 
@@ -70,10 +79,34 @@ def worker_download():
     return res
 
 def worker_caption():
-    pass
+    
+    res = 0
+
+    try:
+        logger.info(f"Calling captioner...")
+        captioner_operation()
+        logger.success(f"Captioner operations completed.")
+
+    except Exception as e:
+        logger.error(f"Captioning failed: {e}")
+        res = 1
+
+    return res
 
 def worker_embed():
-    pass
+    
+    res = 0
+
+    try:
+        logger.info(f"Calling embedder...")
+        embedder_operation()
+        logger.success(f"Embedder operations completed.")
+
+    except Exception as e:
+        logger.error(f"Embedding failed: {e}")
+        res = 1
+
+    return res
 
 def worker_export():
     pass
