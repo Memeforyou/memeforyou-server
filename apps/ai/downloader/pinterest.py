@@ -6,7 +6,7 @@ import re
 from loguru import logger
 from dotenv import load_dotenv
 from downloader.DLutils import download_image, ImageDL, IndvImageURL
-from preps.dblite import add_meme
+from preps.dblite import add_meme, get_all_img_urls
 from typing import List
 
 load_dotenv()
@@ -106,6 +106,12 @@ def run_pinterest_scrape(start_id: int, base_path: str, max: int = 50) -> int:
     keywords = ["밈", "웃긴 짤", "재밌는 짤", "유머 짤"]
     total_per_keyword = int(max / len(keywords))
     seen_urls = set()
+
+    db_urls = get_all_img_urls()
+    for url in db_urls:
+        norm_prev_url = normalize_pin_url(url)
+        seen_urls.add(norm_prev_url)
+    logger.trace(f"Retrieved existing img urls and added to seen_urls.")
 
     logger.info(f"Searching Pinterest images for keywords: {keywords}...")
 
