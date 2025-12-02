@@ -71,8 +71,22 @@ def worker_download():
         choices=["Instagram", "Pinterest"]
     ).ask()
 
+    pinterest_max = 0
+
+    if "Pinterest" in dl_target:
+
+        pinterest_max = int(questionary.text(
+            "Enter maximum Pinterest images to acquire in positive integer:"
+        ))
+
+    # Calculate next id to assign
+    logger.info(f"Checking local DB to see next id")
+    stat_res = get_status_counts()
+    total = sum(stat_res.values())
+    logger.info(f"Current total: {total}, next id: {total+1}")
+
     try:
-        managed_download()
+        managed_download(target=dl_target, next_id=total+1, pin_max=pinterest_max)
 
     except Exception as e:
         logger.error(f"Download failed: {e}")
