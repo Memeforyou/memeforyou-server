@@ -15,7 +15,7 @@ API_KEY = os.getenv("CSE_API_KEY")
 CX_ID = os.getenv("CX_ID")
     
 # Google CSE Search
-def search_pinterest_images(keywords: list[str], total_results: int = 50, date_restrict: str = "d90"):
+def search_pinterest_images(keywords: list[str], total_results: int = 500, date_restrict: str = "d90"):
     """Search Pinterest images via Google Custom Search API using OR keywords."""
 
     # Check env is in place
@@ -92,7 +92,9 @@ def normalize_pin_url(url: str):
 # Main pipeline
 def run_pinterest_scrape(start_id: int, base_path: str) -> int:
     """
-    Orchestrate pinterest download process via Google CSE, and returns updated next image id.
+    Orchestrate Pinterest download process via Google CSE,
+    running each keyword separately.
+    Returns updated next image id.
     """
     id_cursor = start_id
     keywords = ["밈", "웃긴 짤", "재밌는 짤", "유머 짤"]
@@ -100,31 +102,51 @@ def run_pinterest_scrape(start_id: int, base_path: str) -> int:
     seen_urls = set()
 
     logger.info(f"Searching Pinterest images for keywords: {keywords}...")
-    search_results = search_pinterest_images(keywords, total_results=total_per_keyword)
-    logger.info(f"found {len(search_results)} results.")
 
-    for idx, result in enumerate(search_results, start=1):
-        orig_url = result.get("original_url")
-        src_url = result.get("src_url")
+    for kw in keywords:
+        logger.info(f"Running CSE query for keyword: {kw}")
 
-        if not orig_url or normalize_pin_url(orig_url) in seen_urls:
-            continue
-        seen_urls.add(normalize_pin_url(orig_url))
+        # Query each keyword independently
+        search_results = search_pinterest_images([kw], total_results=total_per_keyword)
+        logger.info(f"Keyword '{kw}' returned {len(search_results)} results.")
 
-        # Convert thumbnail to original resolution URL
-        full_res_url = re.sub(r"/\d+x\d*/", "/originals/", orig_url)
+        for result in search_results:
+            orig_url = result.get("original_url")
+            src_url = result.get("src_url")
 
-        # Set download path
-        save_path = os.path.join(base_path, f"{id_cursor}.jpg")
+            if not orig_url:
+                continue
 
-        # Download accordingly
-        dl_response: ImageDL = download_image(url=full_res_url, save_path=save_path)
+            normalized = normalize_pin_url(orig_url)
 
-        # If success, add row to prep DB
-        if dl_response.success:
-            add_meme(original_url=full_res_url, width=dl_response.width, height=dl_response.height, src_url=src_url)
-            logger.info(f"[{idx}] Saved {save_path} from {orig_url}")
-            id_cursor += 1
+            # Skip if already seen
+            if normalized in seen_urls:
+                continue
+            seen_urls.add(normalized)
+
+            # Convert thumbnail to original resolution URL
+            full_res_url = re.sub(r"/\d+x\d*/", "/originals/", orig_url)
+
+            # Set download path
+            save_path = os.path.join(base_path, f"{id_cursor}.jpg")
+
+            # Download accordingly
+            dl_response: ImageDL = download_image(url=full_res_url, save_path=save_path)
+
+            # If success, add row to prep DB
+            if dl_response.success:
+                logger.debug(f"Now trying add_meme")
+                add_meme(
+                    original_url=full_res_url,
+                    width=dl_response.width,
+                    height=dl_response.height,
+                    src_url=src_url,
+                )
+                logger.info(f"[{id_cursor}] Saved {save_path} from {orig_url}")
+                id_cursor += 1
+
+            # Small sleep to respect API and rate limit safety
+            time.sleep(0.1)
 
     return id_cursor
 
