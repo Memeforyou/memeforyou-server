@@ -118,7 +118,7 @@ def manage_db_viewer():
         os.system('cls' if os.name == 'nt' else 'clear')
         questionary.print(f"--- Memes Database Viewer (Page {current_page}/{total_pages}) ---", style="bold")
         # Print header
-        print(f"{'ID':<5} | {'Status':<10} | {'OrigURL':<7} | {'SrcURL':<6} | {'Likes':<5} | {'Dims':<9} | {'Caption':<7} | {'CloudURL':<8} | {'SrcPlat':<7} | {'ImgExist'}")
+        print(f"{'ID':<5} | {'Status':<10} | {'OrigURL':<7} | {'SrcURL':<6} | {'Likes':<5} | {'Dims':<9} | {'Caption':<7} | {'Tags':<4} | {'CloudURL':<8} | {'SrcPlat':<7} | {'ImgExist'}")
         print("-" * 80)
 
         for image in images:
@@ -134,9 +134,10 @@ def manage_db_viewer():
             else:
                 src_plat = "I"
             img_exists = 'Y' if os.path.exists(f"images/{image['image_id']}.jpg") else '\033[31mN\033[0m'
+            tags = len(get_tags_for_image(image['image_id']))
             
             # Print single line per image
-            print(f"{image['image_id']:<5} | {image['status']:<10} | {has_orig_url:<7} | {has_src_url:<6} | {image['like_cnt']:<5} | {dimensions:<9} | {has_caption:<7} | {has_cloud_url:<8} | {src_plat:<7} | {img_exists}")
+            print(f"{image['image_id']:<5} | {image['status']:<10} | {has_orig_url:<7} | {has_src_url:<6} | {image['like_cnt']:<5} | {dimensions:<9} | {has_caption:<7} | {tags:<4} | {has_cloud_url:<8} | {src_plat:<7} | {img_exists}")
         
         # Navigation
         action = questionary.text(
