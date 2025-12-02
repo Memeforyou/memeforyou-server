@@ -1,6 +1,8 @@
 from loguru import logger
 import questionary
 import sys
+import time
+import os
 from downloader.DLmanager import managed_download
 from preps.captioner import captioner_operation
 from preps.embedder import embedder_operation
@@ -109,6 +111,30 @@ def worker_embed():
     return res
 
 def worker_export():
+
+    res = 0
+
+    # Generate timestamped directory and paths
+    timestamp = time.strftime("%m%d%H%M%S")
+    dir_name = f".{timestamp}_seedjson"
+    os.makedirs(dir_name, exist_ok=True)
+    logger.info(f"Created export directory: {dir_name}")
+
+    images_path = os.path.join(dir_name, "images.json")
+    tags_path = os.path.join(dir_name, "tags.json")
+
+    try:
+        logger.info(f"Calling dblite to export to {images_path} and {tags_path}...")
+        export_json(images_path=images_path, tags_path=tags_path)
+        logger.success(f"JSON export completed.")
+
+    except Exception as e:
+        logger.error(f"JSON export failed: {e}")
+        res = 1
+
+    return res
+
+def worker_status():
     pass
 
 def worker_dbstat():
