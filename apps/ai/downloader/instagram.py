@@ -61,7 +61,7 @@ def get_all_imgs_from_post(driver, post_url):
             break
     return imgs
 
-def run_instagram_crawl():
+def run_instagram_scrape():
     BASE_DIR = os.path.dirname(__file__)
     SAVE_DIR = os.path.join(BASE_DIR, "output")
     METADATA_JSON = os.path.join(SAVE_DIR, "metadata_insta.json")
