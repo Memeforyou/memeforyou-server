@@ -37,11 +37,11 @@ def main():
 
             if result == 0:
 
-                questionary.print("Your chosen operation succeeded.", style="fg:green")
+                questionary.print("Your chosen action succeeded.", style="fg:green")
 
             else:
 
-                questionary.print("Your chosen operation failed.", style="fg:red")
+                questionary.print("Your chosen action failed.", style="fg:red")
         
         except Exception as e:
 
@@ -134,11 +134,25 @@ def worker_export():
 
     return res
 
-def worker_status():
-    pass
-
 def worker_dbstat():
-    pass
+    
+    res = 0
+
+    try:
+        logger.info(f"Calling dblite to fetch status...")
+        stat_res = get_status_counts()
+        logger.success(f"Status fetch completed.")
+
+        # Format the dictionary into a readable string for printing
+        status_string = "\n".join([f"  - {status}: {count}" for status, count in stat_res.items()])
+        total = sum(stat_res.values())
+        questionary.print(f"Image Status Counts:\n{status_string}\n---------------------\nTotal Images: {total}")
+
+    except Exception as e:
+        logger.error(f"Status fetch failed: {e}")
+        res = 1
+
+    return res
 
 if __name__ == "__main__":
     main()
