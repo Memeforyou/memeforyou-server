@@ -11,6 +11,7 @@ from preps.init_sqlite import init_db
 
 COMMANDS = {
     "Initialize Database": lambda: worker_init_db(),
+    "Manage Database": lambda: worker_manage_db(),
     "Download New Memes": lambda: worker_download(),
     "Run Captioner": lambda: worker_caption(),
     "Run Embedder": lambda: worker_embed(),
@@ -32,19 +33,14 @@ def main():
             sys.exit(0)
 
         try:
-            
             result = COMMANDS[choice]()
 
             if result == 0:
-
                 questionary.print("Your chosen action succeeded.", style="fg:green")
-
             else:
-
                 questionary.print("Your chosen action failed.", style="fg:red")
-        
-        except Exception as e:
 
+        except Exception as e:
             logger.error(f"An error occurred: {e}")
 
 def worker_init_db():
@@ -61,6 +57,53 @@ def worker_init_db():
         res = 1
 
     return res
+
+MANAGE_COMMANDS = {
+    "View DB": lambda: manage_db_viewer(),
+    "Update Image(s) Status": lambda: manage_db_updater(),
+    "Delete Image(s)": lambda: manage_db_deleter(),
+    "Flush DB": lambda: manage_db_flusher(),
+    "Return to main menu": lambda: ...
+}
+
+def worker_manage_db():
+
+    while True:
+
+        choice = questionary.select(
+            "Choose an action:",
+            choices=list(MANAGE_COMMANDS.keys())
+        ).ask()
+
+        if choice == "Return to main menu":
+            break
+
+        try:
+            result = MANAGE_COMMANDS[choice]()
+
+            if result == 0:
+                questionary.print("Your chosen management action succeeded.", style="fg:green")
+            else:
+                questionary.print("Your chosen management action failed.", style="fg:red")
+        
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+
+# --- DB management functions start ---
+
+def manage_db_viewer():
+    pass
+
+def manage_db_updater():
+    pass
+
+def manage_db_deleter():
+    pass
+
+def manage_db_flusher():
+    pass
+
+# --- DB management functions end ---
 
 def worker_download():
 
