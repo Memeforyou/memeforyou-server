@@ -5,8 +5,8 @@ import time
 import os
 from downloader.DLmanager import managed_download
 from preps.captioner import captioner_operation
-from preps.embedder import embedder_operation
-from preps.dblite import export_json, get_status_counts
+from preps.embedder import embedder_operation, embed_rows
+from preps.dblite import export_json, get_status_counts, get_image_count, get_paginated_images, get_tags_for_image
 from preps.init_sqlite import init_db
 
 COMMANDS = {
@@ -68,6 +68,8 @@ MANAGE_COMMANDS = {
 
 def worker_manage_db():
 
+    res = 0
+
     while True:
 
         choice = questionary.select(
@@ -88,11 +90,71 @@ def worker_manage_db():
         
         except Exception as e:
             logger.error(f"An error occurred: {e}")
+            res = 1
+
+    return res
 
 # --- DB management functions start ---
 
 def manage_db_viewer():
-    pass
+    """An interactive CLI viewer for database rows."""
+    page_size = 10  # Number of images to show per page
+    current_page = 1
+
+    while True:
+        total_images = get_image_count()
+        if total_images == 0:
+            questionary.print("The database is empty. Nothing to show.", style="fg:yellow")
+            return 0
+
+        total_pages = (total_images + page_size - 1) // page_size
+        offset = (current_page - 1) * page_size
+
+        # Fetch data for the current page
+        images = get_paginated_images(limit=page_size, offset=offset)
+
+        # Clear screen and display
+        os.system('cls' if os.name == 'nt' else 'clear')
+        questionary.print(f"--- Memes Database Viewer (Page {current_page}/{total_pages}) ---", style="bold")
+        # Print header
+        print(f"{'ID':<5} | {'Status':<10} | {'OrigURL':<7} | {'SrcURL':<6} | {'Likes':<5} | {'Dims':<9} | {'Caption':<7} | {'CloudURL'}")
+        print("-" * 80)
+
+        for image in images:
+            # Check for existence of URL and caption fields
+            has_orig_url = 'Y' if image['original_url'] else 'N'
+            has_src_url = 'Y' if image['src_url'] else 'N'
+            has_caption = 'Y' if image['caption'] else 'N'
+            has_cloud_url = 'Y' if image['cloud_url'] else 'N'
+            dimensions = f"{image['width']}x{image['height']}"
+            
+            # Print single line per image
+            print(f"{image['image_id']:<5} | {image['status']:<10} | {has_orig_url:<7} | {has_src_url:<6} | {image['like_cnt']:<5} | {dimensions:<9} | {has_caption:<7} | {has_cloud_url}")
+        
+        # Navigation
+        action = questionary.text(
+            "Navigate: [N]ext, [P]revious, [G]oto page, [Q]uit to menu",
+            validate=lambda text: text.lower() in ['n', 'p', 'g', 'q', '']
+        ).ask().lower()
+
+        if action == 'q':
+            break
+        elif action == 'n' or action == '': # Default to next page
+            if current_page < total_pages:
+                current_page += 1
+        elif action == 'p':
+            if current_page > 1:
+                current_page -= 1
+        elif action == 'g':
+            try:
+                page_num = int(questionary.text(f"Enter page number (1-{total_pages}):").ask())
+                if 1 <= page_num <= total_pages:
+                    current_page = page_num
+            except (ValueError, TypeError):
+                questionary.print("Invalid page number.", style="fg:red")
+                time.sleep(1)
+    
+    return 0
 
 def manage_db_updater():
     pass
@@ -124,8 +186,7 @@ def worker_download():
 
     # Calculate next id to assign
     logger.info(f"Checking local DB to see next id")
-    stat_res = get_status_counts()
-    total = sum(stat_res.values())
+    total = get_image_count()
     logger.info(f"Current total: {total}, next id: {total+1}")
 
     try:

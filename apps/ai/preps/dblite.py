@@ -141,3 +141,29 @@ def get_all_img_urls() -> List[str]:
         urls = [row['original_url'] for row in cursor.fetchall() if row['original_url']]
         logger.info(f"Fetched {len(urls)} existing URLs from the database for de-duplication.")
         return urls
+
+# --- DB Management Helpers ---
+
+def get_image_count() -> int:
+    """Returns the total number of images in the database."""
+    with _get_conn() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM Image")
+        return cursor.fetchone()[0]
+
+def get_paginated_images(limit: int, offset: int) -> List[sqlite3.Row]:
+    """Retrieves a page of images, ordered by image_id."""
+    with _get_conn() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM Image ORDER BY image_id LIMIT ? OFFSET ?",
+            (limit, offset)
+        )
+        return cursor.fetchall()
+
+def get_tags_for_image(image_id: int) -> List[str]:
+    """Retrieves all tags for a given image_id."""
+    with _get_conn() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT tag FROM ImageTag WHERE image_id = ?", (image_id,))
+        return [row['tag'] for row in cursor.fetchall()]
