@@ -71,13 +71,12 @@ def export_json(images_path: str, tags_path: str) -> None:
     with _get_conn() as conn:
         cursor = conn.cursor()
 
-        # Export unique tags
-        cursor.execute("SELECT DISTINCT tag FROM ImageTag")
-        all_tags = [row['tag'] for row in cursor.fetchall()]
+        # Export all tags from the Tag table
+        cursor.execute("SELECT tag_id, tag_name FROM Tag ORDER BY tag_id")
+        tags_data = [{"tag_id": row['tag_id'], "tag_name": row['tag_name']} for row in cursor.fetchall()]
 
-        tags_data = [{"tag_id": i, "tag_name": tag} for i, tag in enumerate(all_tags, start=1)]
         with open(tags_path, 'w', encoding='utf-8') as f:
-            json.dump(tags_data, f, ensure_ascii=False, indent=4)
+            json.dump(tags_data, f, ensure_ascii=False, indent=2)
         logger.success(f"Exported {len(tags_data)} unique tags to {tags_path}")
 
         # Export READY memes
