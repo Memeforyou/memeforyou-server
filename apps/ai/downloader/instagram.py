@@ -2,32 +2,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 import time
-import requests
-import re
-import csv
 import os
-from PIL import Image
-import hashlib
-import json
-import io
 from loguru import logger
-
-
-def download_and_hash_image(img_url,save):
-    try:
-        resp = requests.get(img_url, timeout=10)
-        resp.raise_for_status()
-        img = Image.open(io.BytesIO(resp.content))
-        img_hash = hashlib.sha1(resp.content).hexdigest()[:13]  # 13자리 고유값
-        ext = img.format.lower()
-        if ext == 'jpeg': ext = 'jpg'
-        fname = f"{img_hash}.{ext}"
-        img.save(os.path.join(save, fname))
-        return fname
-    except Exception as e:
-        print("이미지 다운로드/해시 오류:", e)
-        return None, None
-    
+from downloader.DLutils import download_image, ImageDL
+from preps.dblite import add_meme
 
 # 상세 URL로 이동해 이미지 추출
 def get_all_imgs_from_post(driver, post_url):
@@ -61,25 +39,20 @@ def get_all_imgs_from_post(driver, post_url):
             break
     return imgs
 
-def run_instagram_scrape():
-    BASE_DIR = os.path.dirname(__file__)
-    SAVE_DIR = os.path.join(BASE_DIR, "output")
-    METADATA_JSON = os.path.join(SAVE_DIR, "metadata_insta.json")
-    os.makedirs(SAVE_DIR, exist_ok=True)
+def run_instagram_scrape(start_id: int, base_path: str) -> int:
+    id_cursor = start_id
 
     driver = webdriver.Chrome()
     driver.get('https://www.instagram.com/accounts/login/')
     time.sleep(30)  # 직접 로그인(수동)
 
-    target_account_url = 'https://www.instagram.com/supermemememememememememe'
+    target_account_url = 'https://www.instagram.com/buzzfeedtasty'
     #crawling 하고자 하는 계정에 따라 target_account_url을 바꿔줘야 함
     driver.get(target_account_url)
     time.sleep(5)
 
     already_seen = set()
     post_urls = []
-    metadata_list = []
-    data = []
 
     # 게시물들의 URL만 미리 모으는 파트(블록 → a → href)
     # 계정이나 검색어에 따라 정보가 바뀌므로 밑의 for 문 구문 정보를 수정해줘야함
@@ -99,42 +72,21 @@ def run_instagram_scrape():
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)
 
-
-
-
     # 모든 URL 반복하며 상세 이미지 수집
     for post_url in post_urls:
         try:
             imgs = get_all_imgs_from_post(driver, post_url)
             for img_data in imgs:
                 img_url = img_data["이미지_url"]
-                fname = download_and_hash_image(img_url,SAVE_DIR)
-                metadata_list.append({
-                        "fname": fname,
-                        "original_url": img_url,
-                        "src_url": post_url,
-                    })
+                save_path = os.path.join(base_path, f"{id_cursor}.jpg")
+                dl_response: ImageDL = download_image(url=img_url, save_path=save_path)
+                if dl_response.success:
+                    add_meme(original_url=img_url, width=dl_response.width, height=dl_response.height, src_url=post_url)
+                    logger.info(f"Saved {save_path} from {post_url}")
+                    id_cursor += 1
         except Exception as e:
             print("이미지 추출 오류:", e)
 
     driver.quit()
-
-
-
-    with open(METADATA_JSON, "w", encoding="utf-8") as f:
-        json.dump(metadata_list, f, ensure_ascii=False, indent=2)
-
-    logger.info(f"\nSaved {len(metadata_list)} unique images locally in '{SAVE_DIR}'.")
-    logger.info(f"Metadata JSON saved to '{METADATA_JSON}'.")
-
-    """
-    print(f"저장된 이미지: {len(metadata_list)}개, JSON: {METADATA_JSON}")
-    # 데이터 저장은 반드시 마지막에 모든 크롤링 후에!
-    with open("output1.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["게시물_url", "이미지_url", "태그", "플랫폼"])
-        for item in data:
-            writer.writerow([item["게시물_url"], item["이미지_url"], ",".join(item["태그"]), item["플랫폼"]])
-    """
-    #csv로 저장하는 부분
     logger.info("Instagram crawling & metadata dump done.")
+    return id_cursor
