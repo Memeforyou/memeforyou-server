@@ -77,7 +77,7 @@ def worker_download():
 
         pinterest_max = int(questionary.text(
             "Enter maximum Pinterest images to acquire in positive integer:"
-        ))
+        ).ask())
 
     # Calculate next id to assign
     logger.info(f"Checking local DB to see next id")

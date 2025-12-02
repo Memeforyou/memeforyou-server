@@ -5,8 +5,9 @@ import requests
 import re
 from loguru import logger
 from dotenv import load_dotenv
-from downloader.DLutils import download_image, ImageDL
+from downloader.DLutils import download_image, ImageDL, IndvImageURL
 from preps.dblite import add_meme
+from typing import List
 
 load_dotenv()
 
@@ -15,8 +16,14 @@ API_KEY = os.getenv("CSE_API_KEY")
 CX_ID = os.getenv("CX_ID")
     
 # Google CSE Search
-def search_pinterest_images(keywords: list[str], total_results: int = 500, date_restrict: str = "d90"):
-    """Search Pinterest images via Google Custom Search API using OR keywords."""
+def search_pinterest_images(
+        keywords: list[str],
+        total_results: int = 200,
+        date_restrict: str = "d90"
+        ) -> List[IndvImageURL]:
+    """
+    Search Pinterest images via Google Custom Search API using keywords.
+    """
 
     # Check env is in place
     if not API_KEY or not CX_ID:
@@ -63,10 +70,9 @@ def search_pinterest_images(keywords: list[str], total_results: int = 500, date_
 
         # Append to results
         for item in items:
-            results.append({
-                "original_url": item.get("link"),
-                "src_url": item.get("image", {}).get("contextLink")
-            })
+            results.append(
+                IndvImageURL(original_url=item.get("link"), src_url=item.get("image", {}).get("contextLink"))
+                )
 
         # Iterate with sleep interval
         start += len(items)
@@ -90,7 +96,7 @@ def normalize_pin_url(url: str):
     return url
 
 # Main pipeline
-def run_pinterest_scrape(start_id: int, base_path: str) -> int:
+def run_pinterest_scrape(start_id: int, base_path: str, max: int = 50) -> int:
     """
     Orchestrate Pinterest download process via Google CSE,
     running each keyword separately.
@@ -98,7 +104,7 @@ def run_pinterest_scrape(start_id: int, base_path: str) -> int:
     """
     id_cursor = start_id
     keywords = ["밈", "웃긴 짤", "재밌는 짤", "유머 짤"]
-    total_per_keyword = 50
+    total_per_keyword = int(max / len(keywords))
     seen_urls = set()
 
     logger.info(f"Searching Pinterest images for keywords: {keywords}...")
@@ -111,8 +117,8 @@ def run_pinterest_scrape(start_id: int, base_path: str) -> int:
         logger.info(f"Keyword '{kw}' returned {len(search_results)} results.")
 
         for result in search_results:
-            orig_url = result.get("original_url")
-            src_url = result.get("src_url")
+            orig_url = result.original_url
+            src_url = result.src_url
 
             if not orig_url:
                 continue
