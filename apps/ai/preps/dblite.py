@@ -125,3 +125,19 @@ def get_status_counts() -> Dict[str, int]:
             counts[status] = count
 
     return counts
+
+def get_all_img_urls() -> List[str]:
+    """
+    Get all image urls for dedup
+    
+    :return: As a list of strings
+    :rtype: List[str]
+    """
+    
+    with _get_conn() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT original_url FROM Image")
+        # Fetch all non-null URLs
+        urls = [row['original_url'] for row in cursor.fetchall() if row['original_url']]
+        logger.info(f"Fetched {len(urls)} existing URLs from the database for de-duplication.")
+        return urls
