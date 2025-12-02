@@ -4,6 +4,8 @@ from .instagram import run_instagram_scrape
 from .neo_pinterest import run_pinterest_scrape
 from ai.preps.dblite import add_meme
 
+BASEPATH = "images/"
+
 def managed_download():
 
     # Initialize image_id counter for id assignment coordination
@@ -13,7 +15,7 @@ def managed_download():
     # Run instagram download
     logger.info(f"Running Instagram scraping... (with beginning id {id_counter})")
     try: 
-        after_id = run_instagram_scrape(start_id=id_counter)
+        after_id = run_instagram_scrape(start_id=id_counter, base_path=BASEPATH)
         logger.success(f"Successfully downloaded from Instagram; {after_id-id_counter} images.")
         id_counter = after_id
     except Exception as e:
@@ -22,7 +24,7 @@ def managed_download():
     # Run Pinterest download
     logger.info(f"Running Pinterest scraping... (with beginning id {id_counter})")
     try:
-        after_id = run_pinterest_scrape(start_id=id_counter)
+        after_id = run_pinterest_scrape(start_id=id_counter, base_path=BASEPATH)
         logger.success(f"Successfully downloaded from Pinterest; {after_id-id_counter} images.")
         id_counter = after_id
     except Exception as e:
