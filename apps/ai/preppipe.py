@@ -1,5 +1,6 @@
 from loguru import logger
 import questionary
+from prompt_toolkit.styles import Style
 import sys
 import time
 import os
@@ -78,7 +79,7 @@ def worker_manage_db():
         ).ask()
 
         if choice == "Return to main menu":
-            break
+            return 0
 
         try:
             result = MANAGE_COMMANDS[choice]()
@@ -163,13 +164,89 @@ def manage_db_viewer():
     return 0
 
 def manage_db_updater():
-    pass
+    
+    res = 0
+
+    # Get user input for target id
+    user_input_id = questionary.text(
+        "Enter IDs of the rows to update:"
+    ).ask()
+    target_ids = parse_id_selection(selection=user_input_id)
+
+    # Get user input for updated status
+    user_input_status = questionary.select(
+        "Select new status:",
+        choices=["PENDING", "CAPTIONED", "READY"]
+    ).ask()
+
+    try:
+        logger.info("Calling dblite to update status...")
+        pass
+        logger.success("Status update completed.")
+    
+    except Exception as e:
+        logger.error(f"Status update failed: {e}")
+        res = 1
+
+    return res
 
 def manage_db_deleter():
-    pass
+
+    res = 0
+
+    # Get user input for target id
+    user_input_id = questionary.text(
+        "Enter IDs of the rows to delete:"
+    ).ask()
+    target_ids = parse_id_selection(selection=user_input_id)
+
+    # Get user input for confirmation
+    user_input_confirm = questionary.confirm(
+        f"Are you sure you want to delete rows {user_input_id}?",
+        default=True,
+        auto_enter=False
+    ).ask()
+
+    if not user_input_confirm:
+        logger.warning(f"Aborting deletion.")
+        return 0
+
+    try:
+        logger.info("Calling dblite to delete rows...")
+        pass
+        logger.success("Deletion completed.")
+    
+    except Exception as e:
+        logger.error(f"Deletion failed: {e}")
+        res = 1
+
+    return res
 
 def manage_db_flusher():
-    pass
+
+    res = 0
+
+    # Get user input for confirmation
+    user_input_confirm = questionary.confirm(
+        f"Are you sure you want to FLUSH THE LOCAL DATABASE?",
+        default=True,
+        auto_enter=False
+    ).ask()
+
+    if not user_input_confirm:
+        logger.warning(f"Aborting flush.")
+        return 0
+
+    try:
+        logger.info("Calling dblite to delete rows...")
+        pass
+        logger.success("Deletion completed.")
+    
+    except Exception as e:
+        logger.error(f"Deletion failed: {e}")
+        res = 1
+
+    return res
 
 # --- DB management functions end ---
 
@@ -277,6 +354,50 @@ def worker_dbstat():
         res = 1
 
     return res
+
+# --- Utility functions start ---
+
+def parse_id_selection(selection: str) -> list[int]:
+    """
+    Parse a user ID selection string into a list of integer IDs.
+    
+    Supports:
+      - Single IDs: "34"
+      - Ranges: "15-18"
+      - Comma-separated: "67, 69"
+      - Mixed: "15, 17-19, 34"
+    """
+    ids = set()
+
+    # Split by comma
+    for part in selection.split(","):
+        part = part.strip()
+        if not part:
+            continue
+
+        # Range case
+        if "-" in part:
+            start, end = part.split("-", 1)
+            start, end = start.strip(), end.strip()
+            if start.isdigit() and end.isdigit():
+                s, e = int(start), int(end)
+                if s <= e:
+                    ids.update(range(s, e + 1))
+                else:
+                    raise ValueError(f"Invalid range (start > end): '{part}'")
+            else:
+                raise ValueError(f"Invalid range format: '{part}'")
+
+        # Single ID case
+        else:
+            if part.isdigit():
+                ids.add(int(part))
+            else:
+                raise ValueError(f"Invalid ID: '{part}'")
+
+    return sorted(ids)
+
+# --- Utility functions end ---
 
 if __name__ == "__main__":
     main()
