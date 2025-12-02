@@ -1,0 +1,35 @@
+/* General App Styling */
+TabPane {
+    padding: 1 2;
+}
+
+Static#status_display {
+    border: round gray;
+    padding: 1;
+}
+
+Log#log_viewer {
+    border: round gray;
+}
+
+/* Button Variants */
+Button.primary {
+    background: #4caf50;
+    color: white;
+}
+
+Button.success {
+    background: #2196f3;
+    color: white;
+}
+
+Button.warning {
+    background: #ff9800;
+    color: white;
+}
+
+Button {
+    border: round white;
+    padding: 0 1;
+    margin: 0 1 1 0;
+}
