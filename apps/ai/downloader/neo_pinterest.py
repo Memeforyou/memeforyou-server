@@ -3,44 +3,72 @@ from .DLutils import IndvImageURL, ImageDL, download_image
 import urllib.request
 import re
 import json
+import time
 from os import path
+from loguru import logger
 from selenium import webdriver
 from typing import List
 
+# Path of the .json file containing target boards' URLs
 BOARDS_PATH = "boards.json"
+# How many times to scroll on a single board
+SCRLIMIT = 15
 
-def board_browser(board_url: str) -> List[str]:
+def board_browser(browser: webdriver.Chrome, board_url: str) -> List[IndvImageURL]:
     """
-    Identify all post URLs in a given board with Selenium.
+    Identify all raw image URLs in a given board with Selenium.
     """
-    pass
+    
+    browser.get(board_url)
 
-def pin_saver(pin_url: str) -> IndvImageURL:
-    """
-    Access the pin, and save URLs for that image with Selenium.
-    """
-    pass
+    time.sleep(1.5)
+
+    limit = SCRLIMIT
+
+    while limit > 0:
+
+        lastCount = browser.execute_script("return document.body.scrollHeight;")
+        time.sleep(3)
+        browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        lenOfPage = browser.execute_script("return document.body.scrollHeight;")
+        limit -= 1
+
+        if lastCount == lenOfPage:
+            logger.info(f"Stopped scrolling for board: {board_url}.")
+            break
+        else:
+            logger.trace("Scrolling...")
+
+    response = browser.page_source
+
+    # Find all urls in the page source with regex
+    all_urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', response)
+
+    img_list: List[IndvImageURL] = []
+
+    for url in all_urls:
+
+        pass
 
 def acquire_urls(boards: List[str]) -> List[IndvImageURL]:
     """
     Acquire a list of all target images' URLs.
     """
 
-    # Initialize lists
-    pins = []
-    urls = []
+    # Initialize browser
+    browser = webdriver.Chrome()
+
+    # Initialize list
+    img_urls: List[IndvImageURL] = []
 
     # Iterate through boards
-    for board in boards:
-        pin_urls = board_browser(board_url=board)
-        pins.extend(pin_urls)
+    try:
+        for board in boards:
+            img_urls.extend(board_browser(browser=browser, board_url=board))
+    except Exception as e:
+        logger.error(f"Exception {e} during scraping board {board}.")
 
-    # Iterate through pins
-    for pin in pins:
-        image_url = pin_saver(pin_url=pin)
-        urls.append(image_url)
-
-    return urls
+    return img_urls
 
 def run_pinterest_scrape(start_id: int, base_path: str) -> int:
     """
