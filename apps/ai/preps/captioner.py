@@ -1,7 +1,7 @@
 from google import genai
 from google.genai import types
 from sqlite3 import Row
-from ai.utils.schema import IndvCaption, BatchCaption
+from utils.schema import IndvCaption, BatchCaption
 from .dblite import get_memes, update_captioned
 from itertools import batched
 from loguru import logger

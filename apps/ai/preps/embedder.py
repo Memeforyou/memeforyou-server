@@ -1,5 +1,5 @@
-from ai.utils.encoder_gemini import generate_embedding_gemini
-from ai.utils.schema import IndvVector
+from utils.encoder_gemini import generate_embedding_gemini
+from utils.schema import IndvVector
 from .dblite import get_memes, update_ready
 from google.cloud import firestore
 from google.cloud.firestore_v1.vector import Vector
