@@ -10,6 +10,22 @@ class MemeMeta(BaseModel):
     humor: str
     tags: List[str]
 
+# Caption for each meme
+class IndvCaption(BaseModel):
+    image_id: int
+    ocr: str
+    caption: str
+    humor: str
+    tags: List[str]
+
+class BatchCaption(BaseModel):
+    captions: List[IndvCaption]
+
+# Vector for each meme
+class IndvVector(BaseModel):
+    image_id: int
+    vector: List[float]
+
 # --- Models for search inference
 class IndvMemeReturn(BaseModel):
     image_id: int

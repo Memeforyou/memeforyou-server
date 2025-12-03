@@ -18,7 +18,7 @@ load_dotenv()
 # Define clients & models
 firestore_client = get_client(database="gdg-ku-meme4you-test")
 gemini_client = genai.Client()
-firestore_collection = firestore_client.collection("embeddings_test")
+firestore_collection = firestore_client.collection("embeddings")
 
 # Config
 metadata_dir = "./" # Remnant from local prototype
@@ -96,7 +96,7 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
     try:
         response = gemini_client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[sys_prompt, user_prompt],
+            contents=user_prompt,
             config=config
         )
         # The response.text is a JSON string. We need to parse it into our Pydantic model.
@@ -111,7 +111,7 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
         return None
 
 # Overall rec pipeline
-async def final_eval(user_input: str, k: int = 10, final_cnt: int = 5) -> Optional[GeminiResponse]:
+async def final_eval(user_input: str, k: int = 20, final_cnt: int = 5) -> Optional[GeminiResponse]:
     """
     user_input: user's natural language input
     k: vector search candidate numbers
@@ -122,6 +122,9 @@ async def final_eval(user_input: str, k: int = 10, final_cnt: int = 5) -> Option
     2. Get metadata for candidates.
     3. Call Gemini for final ranking.
     """
+    # Set initial candidates search number
+    k = 4 * final_cnt
+
     # Get initial candidates from Firestore vector search
     vsearch_results = vsearch_fs(user_input=user_input, k=k)
     candidate_ids = [res.to_dict()['image_id'] for res in vsearch_results if 'image_id' in res.to_dict()]
