@@ -2,6 +2,7 @@ import sqlite3
 from typing import List, Dict
 import json
 from loguru import logger
+from preps.init_sqlite import init_db
 import os
 
 DB_PATH = os.path.join("prepdb.sqlite3")
@@ -167,3 +168,31 @@ def get_tags_for_image(image_id: int) -> List[str]:
         cursor = conn.cursor()
         cursor.execute("SELECT tag FROM ImageTag WHERE image_id = ?", (image_id,))
         return [row['tag'] for row in cursor.fetchall()]
+
+def update_status_only(image_ids: List[int], new_status: str) -> None:
+    """Updates memes' status to whatever user wants."""
+
+    with _get_conn() as conn:
+        cursor = conn.cursor()
+        cursor.executemany(
+            "UPDATE Image SET status = ? WHERE image_id = ?", [(new_status, id) for id in image_ids]
+        )
+        conn.commit()
+
+def delete_rows_by_id(image_ids: List[int]) -> None:
+
+    with _get_conn() as conn:
+        cursor = conn.cursor()
+        logger.info(f"Deleting {len(image_ids)} rows...")
+        cursor.executemany(
+            "UPDATE Image SET status = DELETED WHERE image_id = ?", [(id,) for id in image_ids]
+        )
+        logger.success(f"Deletion complete.")
+        conn.commit()
+
+def flush_db() -> None:
+
+    os.remove(DB_PATH)
+    logger.info(f"Database file deleted.")
+    init_db()
+    logger.success(f"Database regenarated.")
