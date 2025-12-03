@@ -262,11 +262,19 @@ def worker_download():
 
     pinterest_max = 0
 
-    if "Pinterest" in dl_target:
+    if "Instagram" in dl_target:
+        instagram_max = int(questionary.text(
+            "Enter maximum scrolls per account during Instagram scraping in positive integer:"
+        ).ask())
+    else:
+        instagram_max = 0
 
+    if "Pinterest" in dl_target:
         pinterest_max = int(questionary.text(
             "Enter maximum Pinterest images to acquire in positive integer:"
         ).ask())
+    else:
+        pinterest_max = 0
 
     # Calculate next id to assign
     logger.info(f"Checking local DB to see next id")
@@ -274,7 +282,7 @@ def worker_download():
     logger.info(f"Current total: {total}, next id: {total+1}")
 
     try:
-        managed_download(target=dl_target, next_id=total+1, pin_max=pinterest_max)
+        managed_download(target=dl_target, next_id=total+1, ins_max=instagram_max, pin_max=pinterest_max)
 
     except Exception as e:
         logger.error(f"Download failed: {e}")

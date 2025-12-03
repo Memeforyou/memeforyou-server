@@ -7,6 +7,12 @@ from loguru import logger
 from downloader.DLutils import download_image, ImageDL
 from preps.dblite import add_meme, get_all_img_urls
 
+ACCOUNTS = [
+    'https://www.instagram.com/supermemememememememememe/',
+    'https://www.insgagram.com/moongo_moongo/',
+    'https://www.instagram.com/wafterbw/'
+]
+
 # 상세 URL로 이동해 이미지 추출
 def get_all_imgs_from_post(driver, post_url):
     imgs = []
@@ -29,16 +35,14 @@ def get_all_imgs_from_post(driver, post_url):
             break
     return imgs
 
-def run_instagram_scrape(start_id: int, base_path: str) -> int:
-    id_cursor = start_id
+def browse_account(
+        driver: webdriver.Chrome,
+        id_cursor: int,
+        base_path: str,
+        target_account_url: str = 'https://www.instagram.com/supermemememememememememe',
+        max_scroll: int = 5
+        ) -> int:
 
-    driver = webdriver.Chrome()
-    driver.get('https://www.instagram.com/accounts/login/')
-    input("Press enter when you're logged in & ready.")
-    time.sleep(2)
-
-    target_account_url = 'https://www.instagram.com/supermemememememememememe'
-    #crawling 하고자 하는 계정에 따라 target_account_url을 바꿔줘야 함
     driver.get(target_account_url)
     time.sleep(5)
 
@@ -54,7 +58,7 @@ def run_instagram_scrape(start_id: int, base_path: str) -> int:
     # --- Scroll and Collect Post URLs ---
     scroll = 0
     scroll_attempts = 0
-    while scroll < 3: # Limit scrolls to prevent infinite loops
+    while scroll <= max_scroll: # Limit scrolls to prevent infinite loops
         last_height = driver.execute_script("return document.body.scrollHeight")
 
         try:
@@ -64,7 +68,6 @@ def run_instagram_scrape(start_id: int, base_path: str) -> int:
                 for a in a_tags:
                     post_url = a.get_attribute('href')
                     if post_url and post_url not in seen_urls:
-                        seen_urls.add(post_url)
                         post_urls.append(post_url)
         except Exception as e:
             logger.error(f"Error collecting post URLs: {e}")
@@ -109,5 +112,19 @@ def run_instagram_scrape(start_id: int, base_path: str) -> int:
             logger.error(f"Failed to process post {post_url}: {e}")
 
     driver.quit()
-    logger.info("Instagram crawling & metadata dump done.")
+
+    return id_cursor
+
+def run_instagram_scrape(start_id: int, base_path: str, max_scroll: int = 5) -> int:
+    id_cursor = start_id
+
+    driver = webdriver.Chrome()
+    driver.get('https://www.instagram.com/accounts/login/')
+    input("Press enter when you're logged in & ready.")
+    time.sleep(2)
+
+    for account in ACCOUNTS:
+        id_cursor = browse_account(driver=driver, id_cursor=id_cursor, base_path=base_path, target_account_url=account, max_scroll=max_scroll)
+    
+    logger.info("Instagram scraping done.")
     return id_cursor
