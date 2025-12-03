@@ -5,7 +5,7 @@ import time
 import os
 from loguru import logger
 from downloader.DLutils import download_image, ImageDL
-from preps.dblite import add_meme
+from preps.dblite import add_meme, get_all_img_urls
 
 # 상세 URL로 이동해 이미지 추출
 def get_all_imgs_from_post(driver, post_url):
@@ -17,8 +17,8 @@ def get_all_imgs_from_post(driver, post_url):
         try:
             img_elem = driver.find_element(By.XPATH, '//img')
             img_url = img_elem.get_attribute('src')
-            if img_url not in [i['이미지_url'] for i in imgs]:
-                imgs.append({"이미지_url": img_url})
+            if img_url not in [i['image_url'] for i in imgs]:
+                imgs.append({"image_url": img_url})
             # 캐러셀 '다음' 버튼
             next_btn = driver.find_element(By.CSS_SELECTOR, 'button[aria-label="다음"], button[aria-label="Next"]')
             next_btn.click()
@@ -34,48 +34,79 @@ def run_instagram_scrape(start_id: int, base_path: str) -> int:
 
     driver = webdriver.Chrome()
     driver.get('https://www.instagram.com/accounts/login/')
-    time.sleep(30)  # 직접 로그인(수동)
+    input("Press enter when you're logged in & ready.")
+    time.sleep(2)
 
-    target_account_url = 'https://www.instagram.com/buzzfeedtasty'
+    target_account_url = 'https://www.instagram.com/supermemememememememememe'
     #crawling 하고자 하는 계정에 따라 target_account_url을 바꿔줘야 함
     driver.get(target_account_url)
     time.sleep(5)
 
-    already_seen = set()
+    # --- De-duplication Setup ---
+    # Get URLs from DB to avoid re-downloading
+    db_urls = get_all_img_urls()
+    # Use a set for efficient lookup of both DB and newly scraped URLs
+    seen_urls = set(db_urls) 
+    logger.trace(f"Loaded {len(db_urls)} existing URLs from the database for de-duplication.")
+
     post_urls = []
 
-    # 게시물들의 URL만 미리 모으는 파트(블록 → a → href)
-    # 계정이나 검색어에 따라 정보가 바뀌므로 밑의 for 문 구문 정보를 수정해줘야함
-    # range 안에 있는 숫자는 클수록 많은 정보 긁어옴 
-    for _ in range(15):  
+    # --- Scroll and Collect Post URLs ---
+    scroll = 0
+    scroll_attempts = 0
+    while scroll < 3: # Limit scrolls to prevent infinite loops
+        last_height = driver.execute_script("return document.body.scrollHeight")
+
         try:
             blocks = driver.find_elements(By.CSS_SELECTOR, 'div._ac7v.x1ty9z65.xzboxd6') #검색어에 따른 수정 필요
             for block in blocks:
                 a_tags = block.find_elements(By.TAG_NAME, 'a')
                 for a in a_tags:
                     post_url = a.get_attribute('href')
-                    if post_url and post_url not in already_seen:
-                        already_seen.add(post_url)
+                    if post_url and post_url not in seen_urls:
+                        seen_urls.add(post_url)
                         post_urls.append(post_url)
         except Exception as e:
-            print("블록/URL 추출 오류:", e)
+            logger.error(f"Error collecting post URLs: {e}")
+        
+        # Scroll down
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
+        time.sleep(3) # Wait for new content to load
 
-    # 모든 URL 반복하며 상세 이미지 수집
+        # Check if page height has changed
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            scroll_attempts += 1
+            logger.info(f"Page height hasn't changed. Attempt {scroll_attempts}/3 before stopping.")
+            if scroll_attempts >= 3:
+                logger.info("Stopping scroll, no new content detected.")
+                break
+        else:
+            scroll_attempts = 0 # Reset counter if new content is loaded
+
+        scroll += 1
+
+    logger.info(f"Finished collecting. Total unique post URLs to process: {len(post_urls)}")
+
+    # --- Download Images from Collected URLs ---
     for post_url in post_urls:
         try:
             imgs = get_all_imgs_from_post(driver, post_url)
             for img_data in imgs:
-                img_url = img_data["이미지_url"]
+                img_url = img_data["image_url"]
+                # Final check to ensure we don't process a URL twice in this session
+                if img_url in seen_urls:
+                    continue
+                
                 save_path = os.path.join(base_path, f"{id_cursor}.jpg")
                 dl_response: ImageDL = download_image(url=img_url, save_path=save_path)
+                
                 if dl_response.success:
                     add_meme(original_url=img_url, width=dl_response.width, height=dl_response.height, src_url=post_url)
-                    logger.info(f"Saved {save_path} from {post_url}")
+                    logger.info(f"[{id_cursor}] Saved {save_path} from {post_url}")
                     id_cursor += 1
         except Exception as e:
-            print("이미지 추출 오류:", e)
+            logger.error(f"Failed to process post {post_url}: {e}")
 
     driver.quit()
     logger.info("Instagram crawling & metadata dump done.")
