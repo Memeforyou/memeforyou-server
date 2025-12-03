@@ -14,7 +14,7 @@ async def search_meme(request: InputData):
 
     logger.info(f"Recognized request: {request.count} results with {request.text}")
 
-    search_response = await final_eval(request.text, request.count)
+    search_response = await final_eval(user_input=request.text, final_cnt=request.count)
 
     # Construct return
     result = FullRecReturn(
