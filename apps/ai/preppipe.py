@@ -264,7 +264,7 @@ def worker_download():
 
     if "Instagram" in dl_target:
         instagram_max = int(questionary.text(
-            "Enter maximum scrolls per account during Instagram scraping in positive integer:"
+            "Enter maximum scrolls per account during Instagram scraping in non-negative integer:"
         ).ask())
     else:
         instagram_max = 0
