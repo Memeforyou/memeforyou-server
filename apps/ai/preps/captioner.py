@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from os import getenv, path
 from typing import List, Tuple, Dict, Any
 from tqdm import tqdm
+import time
+import random
 
 load_dotenv()
 
@@ -95,7 +97,7 @@ def caption_rows(target_rows: list, base_path: str) -> List[IndvCaption]:
     logger.debug(f"Captioning this batch: {first_meme_id} to {last_meme_id}...")
 
     # Perform gemini_caption on provided batch
-    for i, row in tqdm(enumerate(target_rows)):
+    for i, row in tqdm(enumerate(target_rows), total=len(target_rows)):
 
         # Acquire filename based on iteration
         image_id = row['image_id']
@@ -104,12 +106,22 @@ def caption_rows(target_rows: list, base_path: str) -> List[IndvCaption]:
 
         logger.trace(f"Acquired file path for {i}th image in this batch: ...{fname}. Now requesting...")
 
-        res = gemini_caption(sys_prompt=SYSPROMPT, available_tags=AVAIL_TAGS, img_id=image_id, img_path=img_path)
-        if res:
-            local_captioned_rows.append(res)
-            logger.trace(f"{i}th image in this batch captioned and appended to return.")
-        else:
-            logger.warning(f"Skipping meme ID {image_id} in batch {first_meme_id}-{last_meme_id} due to captioning failure.")
+        for attempt in range(1, 4):
+            try:
+                res = gemini_caption(sys_prompt=SYSPROMPT, available_tags=AVAIL_TAGS, img_id=image_id, img_path=img_path)
+            except Exception as e:
+                logger.error(f"Request failed on {image_id} (attempt {attempt}): {e}")
+            if res:
+                local_captioned_rows.append(res)
+                break
+            else:
+                if attempt < 3:
+                    logger.warning(f"Failure with meme ID {image_id} in batch {first_meme_id}-{last_meme_id}. Retrying...")
+                else:
+                    logger.error(f"Skipping image {image_id} after 3 failed attempts.")
+            time.sleep(1 + attempt)
+
+        time.sleep(0.2 + random.random() * 0.2)
 
     return local_captioned_rows
 
@@ -130,7 +142,6 @@ def caption_converter(before_rows: List[IndvCaption]) -> Tuple[List[int], List[s
         tags.append(row.tags)
 
     return ids, captions, tags
-
 
 def captioner_operation() -> None:
     """

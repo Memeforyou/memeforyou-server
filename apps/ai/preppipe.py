@@ -16,6 +16,7 @@ COMMANDS = {
     "Download New Memes": lambda: worker_download(),
     "Run Captioner": lambda: worker_caption(),
     "Run Embedder": lambda: worker_embed(),
+    "Run FULL Pipeline": lambda: worker_fullpipe(),
     "Export JSON": lambda: worker_export(),
     "Show local DB Status": lambda: worker_dbstat(),
     "Exit": lambda: ...
@@ -262,11 +263,19 @@ def worker_download():
 
     pinterest_max = 0
 
-    if "Pinterest" in dl_target:
+    if "Instagram" in dl_target:
+        instagram_max = int(questionary.text(
+            "Enter maximum scrolls per account during Instagram scraping in non-negative integer:"
+        ).ask())
+    else:
+        instagram_max = 0
 
+    if "Pinterest" in dl_target:
         pinterest_max = int(questionary.text(
             "Enter maximum Pinterest images to acquire in positive integer:"
         ).ask())
+    else:
+        pinterest_max = 0
 
     # Calculate next id to assign
     logger.info(f"Checking local DB to see next id")
@@ -274,7 +283,7 @@ def worker_download():
     logger.info(f"Current total: {total}, next id: {total+1}")
 
     try:
-        managed_download(target=dl_target, next_id=total+1, pin_max=pinterest_max)
+        managed_download(target=dl_target, next_id=total+1, ins_max=instagram_max, pin_max=pinterest_max)
 
     except Exception as e:
         logger.error(f"Download failed: {e}")
@@ -308,6 +317,36 @@ def worker_embed():
 
     except Exception as e:
         logger.error(f"Embedding failed: {e}")
+        res = 1
+
+    return res
+
+def worker_fullpipe():
+
+    res = 0
+
+    try:
+        logger.info(f"Calling worker_download... (internal)")
+        worker_download()
+        logger.success(f"Download complete during FULL Pipe run")
+    except Exception as e:
+        logger.error(f"Download failed during FULL Pipe run: {e}")
+        res = 1
+
+    try:
+        logger.info(f"Calling worker_caption... (internal)")
+        worker_caption()
+        logger.success(f"Captioning complete during FULL Pipe run")
+    except Exception as e:
+        logger.error(f"Captioning failed during FULL Pipe run: {e}")
+        res = 1
+
+    try:
+        logger.info(f"Calling worker_embed... (internal)")
+        worker_embed()
+        logger.success(f"Embedding complete during FULL Pipe run")
+    except Exception as e:
+        logger.error(f"Embedding failed during FULL Pipe run: {e}")
         res = 1
 
     return res
