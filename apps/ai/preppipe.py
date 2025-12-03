@@ -7,7 +7,7 @@ import os
 from downloader.DLmanager import managed_download
 from preps.captioner import captioner_operation
 from preps.embedder import embedder_operation, embed_rows
-from preps.dblite import export_json, get_status_counts, get_image_count, get_paginated_images, get_tags_for_image
+import preps.dblite as db
 from preps.init_sqlite import init_db
 
 COMMANDS = {
@@ -103,7 +103,7 @@ def manage_db_viewer():
     current_page = 1
 
     while True:
-        total_images = get_image_count()
+        total_images = db.get_image_count()
         if total_images == 0:
             questionary.print("The database is empty. Nothing to show.", style="fg:yellow")
             return 0
@@ -112,7 +112,7 @@ def manage_db_viewer():
         offset = (current_page - 1) * page_size
 
         # Fetch data for the current page
-        images = get_paginated_images(limit=page_size, offset=offset)
+        images = db.get_paginated_images(limit=page_size, offset=offset)
 
         # Clear screen and display
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -134,7 +134,7 @@ def manage_db_viewer():
             else:
                 src_plat = "I"
             img_exists = 'Y' if os.path.exists(f"images/{image['image_id']}.jpg") else '\033[31mN\033[0m'
-            tags = len(get_tags_for_image(image['image_id']))
+            tags = len(db.get_tags_for_image(image['image_id']))
             
             # Print single line per image
             print(f"{image['image_id']:<3} | {image['status']:<9} | {has_orig_url:<6} | {has_src_url:<6} | {image['like_cnt']:<3} | {dimensions:<9} | {has_caption:<7} | {tags:<3} | {has_cloud_url:<8} | {src_plat:<4} | {img_exists}")
@@ -182,7 +182,7 @@ def manage_db_updater():
 
     try:
         logger.info("Calling dblite to update status...")
-        pass
+        db.update_status_only(target_ids=target_ids, new_status=user_input_status)
         logger.success("Status update completed.")
     
     except Exception as e:
@@ -214,7 +214,7 @@ def manage_db_deleter():
 
     try:
         logger.info("Calling dblite to delete rows...")
-        pass
+        db.delete_rows_by_id(target_ids)
         logger.success("Deletion completed.")
     
     except Exception as e:
@@ -240,7 +240,7 @@ def manage_db_flusher():
 
     try:
         logger.info("Calling dblite to delete rows...")
-        pass
+        db.flush_db()
         logger.success("Deletion completed.")
     
     except Exception as e:
@@ -270,7 +270,7 @@ def worker_download():
 
     # Calculate next id to assign
     logger.info(f"Checking local DB to see next id")
-    total = get_image_count()
+    total = db.get_image_count()
     logger.info(f"Current total: {total}, next id: {total+1}")
 
     try:
@@ -327,7 +327,7 @@ def worker_export():
 
     try:
         logger.info(f"Calling dblite to export to {images_path} and {tags_path}...")
-        export_json(images_path=images_path, tags_path=tags_path)
+        db.export_json(images_path=images_path, tags_path=tags_path)
         logger.success(f"JSON export completed.")
 
     except Exception as e:
@@ -342,7 +342,7 @@ def worker_dbstat():
 
     try:
         logger.info(f"Calling dblite to fetch status...")
-        stat_res = get_status_counts()
+        stat_res = db.get_status_counts()
         logger.success(f"Status fetch completed.")
 
         # Format the dictionary into a readable string for printing
