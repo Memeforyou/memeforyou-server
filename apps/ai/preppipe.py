@@ -118,8 +118,8 @@ def manage_db_viewer():
         os.system('cls' if os.name == 'nt' else 'clear')
         questionary.print(f"--- Memes Database Viewer (Page {current_page}/{total_pages}) ---", style="bold")
         # Print header
-        print(f"{'ID':<5} | {'Status':<10} | {'OrigURL':<7} | {'SrcURL':<6} | {'Likes':<5} | {'Dims':<9} | {'Caption':<7} | {'Tags':<4} | {'CloudURL':<8} | {'SrcPlat':<7} | {'ImgExist'}")
-        print("-" * 80)
+        print(f"{'ID':<3} | {'Status':<9} | {'OrgURL':<6} | {'SrcURL':<6} | {'Lks':<3} | {'Dims':<9} | {'Caption':<7} | {'Tgs':<3} | {'CloudURL':<8} | {'Plat':<4} | {'ImgExist'}")
+        print("-" * 97)
 
         for image in images:
             # Check for existence of URL and caption fields
@@ -137,7 +137,7 @@ def manage_db_viewer():
             tags = len(get_tags_for_image(image['image_id']))
             
             # Print single line per image
-            print(f"{image['image_id']:<5} | {image['status']:<10} | {has_orig_url:<7} | {has_src_url:<6} | {image['like_cnt']:<5} | {dimensions:<9} | {has_caption:<7} | {tags:<4} | {has_cloud_url:<8} | {src_plat:<7} | {img_exists}")
+            print(f"{image['image_id']:<3} | {image['status']:<9} | {has_orig_url:<6} | {has_src_url:<6} | {image['like_cnt']:<3} | {dimensions:<9} | {has_caption:<7} | {tags:<3} | {has_cloud_url:<8} | {src_plat:<4} | {img_exists}")
         
         # Navigation
         action = questionary.text(
