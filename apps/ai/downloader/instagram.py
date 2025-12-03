@@ -12,16 +12,6 @@ def get_all_imgs_from_post(driver, post_url):
     imgs = []
     driver.get(post_url)
     time.sleep(3)
-    """
-    hashtags = []
-    try:
-        hashtag_a_tags = driver.find_elements(By.CSS_SELECTOR, 'a[href^="/explore/tags"]')
-        hashtags = [a.text.strip() for a in hashtag_a_tags if a.text.strip()]
-    except Exception as e:
-        print("태그 추출 오류:", e)
-
-    """
-    # 그냥 태그 추출 X
 
     while True:
         try:
