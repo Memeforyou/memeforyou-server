@@ -93,11 +93,13 @@ def export_json(images_path: str, tags_path: str) -> None:
 
             image_tag_create_list = [{"tag": {"connect": {"tag_name": tag}}} for tag in image_tags]
 
+            makeshift_cloud_url = "https://storage.googleapis.com/gdg-ku-meme4you-test/"+str(image_row['image_id'])+".jpg"
+
             images_data.append({
                 "image_id": image_row['image_id'],
                 "original_url": image_row['original_url'],
                 "src_url": image_row['src_url'],
-                "cloud_url": image_row['cloud_url'],
+                "cloud_url": makeshift_cloud_url,
                 "caption": image_row['caption'],
                 "width": image_row['width'],
                 "height": image_row['height'],
