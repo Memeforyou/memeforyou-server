@@ -8,6 +8,7 @@ from loguru import logger
 from dotenv import load_dotenv
 from os import getenv, path
 from typing import List, Tuple, Dict, Any
+from tqdm import tqdm
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ SYSPROMPT = """
 제시된 json 스키마에 따라서 반환해.
 """
 AVAIL_TAGS = ["웃긴", "슬픈", "귀여운", "동물", "사람", "카툰", "캐릭터"]
-BPATH = "./downloads/"
+BPATH = "images/"
 
 def gemini_caption(sys_prompt: str, available_tags: List[str], img_id: int, img_path: str) -> IndvCaption:
     """
@@ -94,7 +95,7 @@ def caption_rows(target_rows: list, base_path: str) -> List[IndvCaption]:
     logger.debug(f"Captioning this batch: {first_meme_id} to {last_meme_id}...")
 
     # Perform gemini_caption on provided batch
-    for i, row in enumerate(target_rows):
+    for i, row in tqdm(enumerate(target_rows)):
 
         # Acquire filename based on iteration
         image_id = row['image_id']
