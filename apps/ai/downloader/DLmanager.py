@@ -27,7 +27,7 @@ def managed_download(target: List[str] = ["Instagram", "Pinterest"], next_id: in
     if "Pinterest" in target:
         logger.info(f"Running Pinterest scraping... (with beginning id {id_counter})")
         try:
-            after_id = run_pinterest_scrape(start_id=id_counter, base_path=BASEPATH)
+            after_id = run_pinterest_scrape(start_id=id_counter, base_path=BASEPATH, max=pin_max)
             logger.success(f"Successfully downloaded from Pinterest; {after_id-id_counter} images.")
             id_counter = after_id
         except Exception as e:
