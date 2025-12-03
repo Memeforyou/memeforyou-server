@@ -182,7 +182,7 @@ def manage_db_updater():
 
     try:
         logger.info("Calling dblite to update status...")
-        db.update_status_only(target_ids=target_ids, new_status=user_input_status)
+        db.update_status_only(image_ids=target_ids, new_status=user_input_status)
         logger.success("Status update completed.")
     
     except Exception as e:
