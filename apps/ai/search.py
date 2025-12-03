@@ -18,7 +18,7 @@ load_dotenv()
 # Define clients & models
 firestore_client = get_client(database="gdg-ku-meme4you-test")
 gemini_client = genai.Client()
-firestore_collection = firestore_client.collection("embeddings_test")
+firestore_collection = firestore_client.collection("embeddings")
 
 # Config
 metadata_dir = "./" # Remnant from local prototype
@@ -111,7 +111,7 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
         return None
 
 # Overall rec pipeline
-async def final_eval(user_input: str, k: int = 0, final_cnt: int = 5) -> Optional[GeminiResponse]:
+async def final_eval(user_input: str, k: int = 20, final_cnt: int = 5) -> Optional[GeminiResponse]:
     """
     user_input: user's natural language input
     k: vector search candidate numbers
@@ -123,8 +123,7 @@ async def final_eval(user_input: str, k: int = 0, final_cnt: int = 5) -> Optiona
     3. Call Gemini for final ranking.
     """
     # Set initial candidates search number
-    if k == 0:
-        k = 5 * final_cnt
+    k = 4 * final_cnt
 
     # Get initial candidates from Firestore vector search
     vsearch_results = vsearch_fs(user_input=user_input, k=k)
