@@ -1,10 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from search import final_eval
 from utils.schema import InputData, FullRecReturn
 
 # Initialize FastAPI app
 app = FastAPI(title="memeforyou AI API - GDGoC KU 2025 worktree")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://memeforyou-server-production.up.railway.app:8080", "http://memeforyou-server-production.up.railway.app:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/ai/similar",
           response_model=FullRecReturn,
