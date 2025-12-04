@@ -62,6 +62,8 @@ def get_prompt(cnt: int, user_input: str, images: List[ImageTrivial]) -> Tuple[s
 제시된 후보 밈 중에서, 이용자의 **상황 및 맥락**에 가장 일치하는 밈 상위 {cnt}개를 선정해.
 선정한 {cnt}개의 밈을 가장 적절한 순서대로 아래 JSON 형식으로 반환해.
 
+만약 제시된 후보 중 동일한 이미지인 것이 의심될 정도로 메타데이터가 유사한 후보들이 있는 경우, 중복 선정하지 말고 그 중 하나만 처리하고 나머지는 제외해.
+
 {{"text": [
     {{"image_id": <id of the best fitting meme image>}},
     {{"image_id": <id of the second best fitting meme image>}},
@@ -70,7 +72,7 @@ def get_prompt(cnt: int, user_input: str, images: List[ImageTrivial]) -> Tuple[s
 ]}}
 """
     
-    user_input = "User's situation: " + user_input + "\n"
+    user_input = "이용자의 현재 상황: " + user_input + "\n"
     
     # Format the candidate images into a string for the user prompt
     candidates_list = []
