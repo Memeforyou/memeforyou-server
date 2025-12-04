@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 
 load_dotenv()
 
-COLLECTION_NAME = "embeddings"
+COLLECTION_NAME = getenv("FIRESTORE_COLLECTION")
 DB_ID = "gdg-ku-meme4you-test"
 PROJECT_ID = getenv("GOOGLE_PROJECT_ID")
 

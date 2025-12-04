@@ -12,13 +12,14 @@ from utils.dbhandler import get_meta
 from utils.gauth import get_client
 from utils.schema import ImageTrivial, GeminiResponse
 from typing import List, Optional, Tuple
+from os import getenv
 
 load_dotenv()
 
 # Define clients & models
 firestore_client = get_client(database="gdg-ku-meme4you-test")
 gemini_client = genai.Client()
-firestore_collection = firestore_client.collection("embeddings")
+firestore_collection = firestore_client.collection(getenv("FIRESTORE_COLLECTION"))
 
 # Config
 metadata_dir = "./" # Remnant from local prototype
