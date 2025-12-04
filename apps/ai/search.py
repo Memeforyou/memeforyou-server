@@ -54,7 +54,7 @@ def vsearch_fs(user_input: str, k: int = 5) -> List[DocumentSnapshot]:
     return ret
 
 # Function to return the prompt for final Gemini selection
-def get_prompt(cnt: int, images: List[ImageTrivial]) -> Tuple[str, str]:
+def get_prompt(cnt: int, user_input: str, images: List[ImageTrivial]) -> Tuple[str, str, str]:
 
     sys_prompt = f"""
 너는 이용자의 상황에 딱 맞는 밈을 추천해주는데 통달한 유머러스하고 재치있는 조언자야.
@@ -70,6 +70,8 @@ def get_prompt(cnt: int, images: List[ImageTrivial]) -> Tuple[str, str]:
 ]}}
 """
     
+    user_input = "User's situation: " + user_input + "\n"
+    
     # Format the candidate images into a string for the user prompt
     candidates_list = []
     for img in images:
@@ -80,10 +82,10 @@ def get_prompt(cnt: int, images: List[ImageTrivial]) -> Tuple[str, str]:
     
     candidates_str = "---\n" + "\n".join(candidates_list)
 
-    return sys_prompt, candidates_str
+    return sys_prompt, user_input, candidates_str
 
 # Function for final evaluation request to Gemini
-def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
+def gemini_call(sys_prompt: str, user_input: str, user_prompt: str) -> Optional[GeminiResponse]:
     """
     Makes a structured content generation call to the Gemini API.
     """
@@ -97,7 +99,7 @@ def gemini_call(sys_prompt: str, user_prompt: str) -> Optional[GeminiResponse]:
     try:
         response = gemini_client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=user_prompt,
+            contents=[user_input, user_prompt],
             config=config
         )
         # The response.text is a JSON string. We need to parse it into our Pydantic model.
@@ -139,9 +141,9 @@ async def final_eval(user_input: str, k: int = 20, final_cnt: int = 5) -> Option
     logger.info("Metadata retrieval for candidates complete.")
 
     # Prepare prompts and call Gemini
-    sys_prompt, user_prompt = get_prompt(cnt=final_cnt, images=candidate_images)
+    sys_prompt, user_input_prompt, user_prompt = get_prompt(cnt=final_cnt, user_input=user_input, images=candidate_images)
     logger.info("Prompt ready. Now calling Gemini...")
-    gemini_response = gemini_call(sys_prompt=sys_prompt, user_prompt=user_prompt)
+    gemini_response = gemini_call(sys_prompt=sys_prompt, user_input=user_input_prompt, user_prompt=user_prompt)
     logger.success("Final evaluation complete.")
     
     return gemini_response
