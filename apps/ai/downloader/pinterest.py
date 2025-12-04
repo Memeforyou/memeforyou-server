@@ -147,7 +147,7 @@ def run_pinterest_scrape(start_id: int, base_path: str, max: int = 50) -> int:
 
             # If success, add row to prep DB
             if dl_response.success:
-                logger.debug(f"Now trying add_meme")
+                logger.trace(f"Now trying add_meme")
                 add_meme(
                     original_url=full_res_url,
                     width=dl_response.width,

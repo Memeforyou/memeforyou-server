@@ -12,13 +12,14 @@ from utils.dbhandler import get_meta
 from utils.gauth import get_client
 from utils.schema import ImageTrivial, GeminiResponse
 from typing import List, Optional, Tuple
+from os import getenv
 
 load_dotenv()
 
 # Define clients & models
 firestore_client = get_client(database="gdg-ku-meme4you-test")
 gemini_client = genai.Client()
-firestore_collection = firestore_client.collection("embeddings")
+firestore_collection = firestore_client.collection(getenv("FIRESTORE_COLLECTION"))
 
 # Config
 metadata_dir = "./" # Remnant from local prototype
@@ -58,7 +59,7 @@ def get_prompt(cnt: int, user_input: str, images: List[ImageTrivial]) -> Tuple[s
     sys_prompt = f"""
 너는 이용자의 상황에 딱 맞는 밈을 추천해주는데 통달한 유머러스하고 재치있는 조언자야.
 
-제시된 후보 밈 중에서, 이용자의 상황 및 맥락에 가장 적절하게 적용될 수 있는 밈 상위 {cnt}개를 선정해.
+제시된 후보 밈 중에서, 이용자의 **상황 및 맥락**에 가장 일치하는 밈 상위 {cnt}개를 선정해.
 선정한 {cnt}개의 밈을 가장 적절한 순서대로 아래 JSON 형식으로 반환해.
 
 {{"text": [
